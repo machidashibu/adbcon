@@ -7,8 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// ServerUrlADBConsoleServerLocalServer defines the Server URL for ADB console server (local server)
-const ServerUrlADBConsoleServerLocalServer = "http://localhost:8080"
+// ServerUrlADBConsoleServer defines the Server URL for ADB console server
+const ServerUrlADBConsoleServer = "https://localhost:8080"
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {

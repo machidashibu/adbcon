@@ -4,8 +4,8 @@ info:
   version: 1.0.0
   description: This is an API documentation for ADB console server.
 servers:
-  - url: http://localhost:8080
-    description: ADB console server (local server)
+  - url: https://localhost:8080
+    description: ADB console server
 paths:
   /gui:
     get:

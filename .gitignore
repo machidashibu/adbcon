@@ -33,3 +33,4 @@ go.work.sum
 
 # user files
 *.log
+*.pem

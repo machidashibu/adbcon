@@ -1,6 +1,7 @@
 package main
 
 import (
+	"adbcon/internal/infra/server"
 	"context"
 	"fmt"
 	"log/slog"
@@ -33,10 +34,25 @@ func run() int {
 	defer cancel()
 
 	slog.Info("start application")
-	// TODO
+	// start server
+	apiServer := server.NewEchoServer()
+	apiError := make(chan error, 1)
+	go func() {
+		if err := apiServer.Start(); err != nil {
+			apiError <- err
+		}
+	}()
 
 	// wait CTRL+C
-	<-ctx.Done()
+	select {
+	case <-ctx.Done(): // CTRL+C
+		// shutdown server
+		if err := apiServer.Shutdown(); err != nil {
+			return abort(err)
+		}
+	case err := <-apiError:
+		return abort(err)
+	}
 	slog.Info("terminate application")
 
 	return 0
