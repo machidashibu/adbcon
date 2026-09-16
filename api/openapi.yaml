@@ -1,0 +1,21 @@
+openapi: 3.0.4
+info:
+  title: ADB Console API
+  version: 1.0.0
+  description: This is an API documentation for ADB console server.
+servers:
+  - url: http://localhost:8080
+    description: ADB console server (local server)
+paths:
+  /gui:
+    get:
+      summary: Get GUI
+      description: Get main page of ADB console.
+      operationId: GetMainPage
+      responses:
+        '200':
+          description: Return main page of ADB console.
+          content:
+            text/html:
+              schema:
+                type: string

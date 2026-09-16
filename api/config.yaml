@@ -1,0 +1,8 @@
+package: api
+generate:
+  echo-server: true
+  models: true
+  server-urls: true
+output: api-gen.go
+output-options:
+  skip-prune: false
