@@ -5,7 +5,6 @@ import (
 	"adbcon/internal/adapter/controller"
 	"adbcon/internal/adapter/handler"
 	"context"
-	_ "embed"
 	"errors"
 	"log/slog"
 	"net"
@@ -16,24 +15,23 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-//go:embed assets/cert.pem
-var serverCert []byte
-
-//go:embed assets/key.pem
-var serverKey []byte
-
 type EchoServer struct {
 	srv *echo.Echo
 }
 
 func NewEchoServer() *EchoServer {
-	return &EchoServer{}
+	return &EchoServer{
+		srv: echo.New(),
+	}
 }
 
 func (s *EchoServer) Start() error {
-	s.srv = echo.New()
 	s.srv.Use(middleware.RequestLogger())
 	s.srv.Use(middleware.Recover())
+	// set middleware for assets that provides static files
+	s.srv.Pre(AssetsWithConfig(AssetsConfig{
+		Assets: assetsTable,
+	}))
 
 	api.RegisterHandlers(s.srv, handler.NewEchoHandler())
 

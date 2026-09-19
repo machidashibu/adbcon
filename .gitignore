@@ -33,4 +33,6 @@ go.work.sum
 
 # user files
 *.log
+# temporary for debugging
 *.pem
+testdata/*.bat
