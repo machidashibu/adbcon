@@ -1,6 +1,7 @@
 package main
 
 import (
+	"adbcon/internal/infra/config"
 	"adbcon/internal/infra/server"
 	"context"
 	"fmt"
@@ -29,16 +30,22 @@ func main() {
 }
 
 func run() int {
+	// read configuration
+	cfg := new(config.Config)
+	if err := cfg.Read("config.yaml"); err != nil {
+		return abort(err)
+	}
+
 	// create application context
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
 	slog.Info("start application")
-	// start server
+	// start API server
 	apiServer := server.NewEchoServer()
 	apiError := make(chan error, 1)
 	go func() {
-		if err := apiServer.Start(); err != nil {
+		if err := apiServer.Start(cfg); err != nil {
 			apiError <- err
 		}
 	}()

@@ -2,7 +2,6 @@ package server
 
 import (
 	"adbcon/api"
-	"adbcon/internal/adapter/controller"
 	"adbcon/internal/adapter/handler"
 	"context"
 	"errors"
@@ -15,6 +14,11 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+type echoServerConfig interface {
+	ServerBind() string
+	ServerPort() string
+}
+
 type EchoServer struct {
 	srv *echo.Echo
 }
@@ -25,7 +29,7 @@ func NewEchoServer() *EchoServer {
 	}
 }
 
-func (s *EchoServer) Start() error {
+func (s *EchoServer) Start(config echoServerConfig) error {
 	s.srv.Use(middleware.RequestLogger())
 	s.srv.Use(middleware.Recover())
 	// set middleware for assets that provides static files
@@ -35,14 +39,8 @@ func (s *EchoServer) Start() error {
 
 	api.RegisterHandlers(s.srv, handler.NewEchoHandler())
 
-	addr, err := controller.GetServerAddr()
-	if err != nil {
-		slog.Error("server address error", "err", err)
-		return err
-	}
-
-	err = s.srv.StartTLS(addr, serverCert, serverKey)
-	if isCiticalError(err) {
+	addr := net.JoinHostPort(config.ServerBind(), config.ServerPort())
+	if err := s.srv.StartTLS(addr, serverCert, serverKey); isCiticalError(err) {
 		slog.Error("server start error", "err", err, "addr", addr)
 		return err
 	}
