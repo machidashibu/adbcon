@@ -7,7 +7,7 @@ import (
 	"os/exec"
 )
 
-// Command is a class to execute OS command.
+// Command is a wrapper to execute OS command.
 type Command struct {
 	name string
 	args []string
