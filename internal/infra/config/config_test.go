@@ -20,6 +20,10 @@ func TestConfig(t *testing.T) {
 			name:      "read error",
 			path:      "config.yaml",
 			readError: true,
+			result: map[string]any{
+				"bind": "localhost",
+				"port": "8080",
+			},
 		},
 		{
 			name: "read full setting",
@@ -49,9 +53,9 @@ func TestConfig(t *testing.T) {
 			} else {
 				// testing: read and value
 				require.NoError(t, cfg.Read(tc.path))
-				require.Equal(t, tc.result["bind"], cfg.ServerBind())
-				require.Equal(t, tc.result["port"], cfg.ServerPort())
 			}
+			require.Equal(t, tc.result["bind"], cfg.ServerBind())
+			require.Equal(t, tc.result["port"], cfg.ServerPort())
 		})
 	}
 }

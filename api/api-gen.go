@@ -4,14 +4,116 @@
 package api
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 )
 
 // ServerUrlDefault defines the Server URL for default
 const ServerUrlDefault = "https://localhost:8080"
 
+// Defines values for DeviceStatus.
+const (
+	Offline      DeviceStatus = "offline"
+	Online       DeviceStatus = "online"
+	Unauthorized DeviceStatus = "unauthorized"
+	Unknown      DeviceStatus = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the DeviceStatus enum.
+func (e DeviceStatus) Valid() bool {
+	switch e {
+	case Offline:
+		return true
+	case Online:
+		return true
+	case Unauthorized:
+		return true
+	case Unknown:
+		return true
+	default:
+		return false
+	}
+}
+
+// DeviceInfo Devide information.
+type DeviceInfo struct {
+	// Device Example: ???
+	Device *string `json:"device,omitempty"`
+
+	// Model Model name of device.
+	//
+	// Example: Pixel-10
+	Model *string `json:"model,omitempty"`
+
+	// Product Product name of device.
+	//
+	// Example: ???
+	Product *string `json:"product,omitempty"`
+
+	// Serial serial of device.
+	//
+	// Example: ABC123DEF
+	Serial DeviceSerial `json:"serial"`
+
+	// Status Status of device.
+	//
+	// Example: online
+	Status DeviceStatus `json:"status"`
+
+	// Tid Transport ID.
+	//
+	// Example: 1
+	Tid *int `json:"tid,omitempty"`
+}
+
+// DeviceList List of devices with information.
+type DeviceList = []DeviceInfo
+
+// DeviceSerial serial of device.
+//
+// Example: ABC123DEF
+type DeviceSerial = string
+
+// DeviceStatus Status of device.
+//
+// Example: online
+type DeviceStatus string
+
+// ProblemDetails Details for error response.
+type ProblemDetails struct {
+	// Detail Error message.
+	//
+	// Example: 'foo' is not recognized as an internal or external command, operable program or batch file.
+	Detail *string `json:"detail,omitempty"`
+
+	// Status Status code.
+	//
+	// Example: 500
+	Status *int `json:"status,omitempty"`
+
+	// Title Readful text for status code.
+	//
+	// Example: Internal Server Error
+	Title *string `json:"title,omitempty"`
+}
+
+// PollingInterval defines model for PollingInterval.
+type PollingInterval = int
+
+// GetDevicesParams defines parameters for GetDevices.
+type GetDevicesParams struct {
+	// Interval Interval time for polling. (seconds) If omit or 0 then no polling. (1 shot)
+	Interval *PollingInterval `form:"interval,omitempty" json:"interval,omitempty"`
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// GetDevices Execute adb devices command.
+	// (GET /api/devices)
+	GetDevices(ctx echo.Context, params GetDevicesParams) error
 	// GetMainPage Get GUI
 	// (GET /gui)
 	GetMainPage(ctx echo.Context) error
@@ -20,6 +122,24 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetDevices converts echo context to params.
+func (w *ServerInterfaceWrapper) GetDevices(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetDevicesParams
+	// ------------- Optional query parameter "interval" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "interval", ctx.QueryParams(), &params.Interval, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter interval: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetDevices(ctx, params)
+	return err
 }
 
 // GetMainPage converts echo context to params.
@@ -79,5 +199,6 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 	}
 
 	router.GET(options.BaseURL+"/gui", wrapper.GetMainPage, options.OperationMiddlewares["GetMainPage"]...)
+	router.GET(options.BaseURL+"/api/devices", wrapper.GetDevices, options.OperationMiddlewares["GetDevices"]...)
 
 }

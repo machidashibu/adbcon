@@ -19,3 +19,149 @@ paths:
             text/html:
               schema:
                 type: string
+  /api/devices:
+    get:
+      summary: Execute adb devices command.
+      operationId: GetDevices
+      parameters:
+        - $ref: "#/components/parameters/PollingInterval"
+      responses:
+        '200':
+          description: Return list of devices information.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceList"
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+components:
+  parameters:
+    CommandArgs:
+      description: List of command arguments.
+      name: args
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        $ref: "#/components/schemas/CommandArgs"
+      example: args=-n,4,8.8.8.8
+    PollingInterval:
+      description: Interval time for polling. (seconds) If omit or 0 then no polling. (1 shot)
+      name: interval
+      in: query
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: integer
+        minimum: 0
+      example: 5
+  responses:
+    SSEResponse:
+      description: Response SSE stream
+      headers:
+        Content-Type:
+          schema:
+            description: Content-Type for SSE
+            type: string
+            example: text/event-stream
+        Cache-Control:
+          schema:
+            description: Prohibit cashe in browser and/or relay server.
+            type: string
+            example: no-cache
+        Connection:
+          schema:
+            description: Keep connection.
+            type: string
+            example: keep-alive
+        X-Accel-Buffering:
+          schema:
+            description: Disable response buffering in proxy. (option)
+            type: string
+            example: 'no'
+      content:
+        text/event-stream:
+          schema:
+            description: SSE message. (data body is JSON format)
+            type: string
+            example: 'data: {...}'
+
+  schemas:
+    CommandArgs:
+      description: Command arguments.
+      type: array
+      items:
+        type: string
+    DeviceSerial:
+      description: serial of device.
+      type: string
+      example: ABC123DEF
+    DeviceStatus:
+      description: Status of device.
+      type: string
+      enum:
+        - online
+        - offline
+        - unauthorized
+        - unknown
+      example: online
+    DeviceInfo:
+      description: Devide information.
+      type: object
+      properties:
+        serial:
+          $ref: "#/components/schemas/DeviceSerial"
+        status:
+          $ref: "#/components/schemas/DeviceStatus"
+        product:
+          description: Product name of device.
+          type: string
+          example: ???
+        model:
+          description: Model name of device.
+          type: string
+          example: Pixel-10
+        device:
+          type: string
+          example: ???
+        tid:
+          description: Transport ID.
+          type: integer
+          example: 1
+      required:
+        - serial
+        - status
+    DeviceList:
+      description: List of devices with information.
+      type: array
+      items:
+        $ref: "#/components/schemas/DeviceInfo"
+    ProblemDetails:
+      description: Details for error response.
+      type: object
+      properties:
+        status:
+          description: Status code.
+          type: integer
+          example: 500
+        title:
+          description: Readful text for status code.
+          type: string
+          example: Internal Server Error
+        detail:
+          description: Error message.
+          type: string
+          example: "'foo' is not recognized as an internal or external command, operable program or batch file."

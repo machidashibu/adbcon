@@ -2,7 +2,6 @@ package server
 
 import (
 	"adbcon/api"
-	"adbcon/internal/adapter/handler"
 	"context"
 	"errors"
 	"log/slog"
@@ -29,7 +28,7 @@ func NewEchoServer() *EchoServer {
 	}
 }
 
-func (s *EchoServer) Start(config echoServerConfig) error {
+func (s *EchoServer) Start(config echoServerConfig, handler api.ServerInterface) error {
 	s.srv.Use(middleware.RequestLogger())
 	s.srv.Use(middleware.Recover())
 	// set middleware for assets that provides static files
@@ -37,7 +36,7 @@ func (s *EchoServer) Start(config echoServerConfig) error {
 		Assets: assetsTable,
 	}))
 
-	api.RegisterHandlers(s.srv, handler.NewEchoHandler())
+	api.RegisterHandlers(s.srv, handler)
 
 	addr := net.JoinHostPort(config.ServerBind(), config.ServerPort())
 	if err := s.srv.StartTLS(addr, serverCert, serverKey); isCiticalError(err) {

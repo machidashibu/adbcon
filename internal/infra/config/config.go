@@ -24,27 +24,24 @@ type ServerConfig struct {
 
 // Read reads configurations from file.
 func (c *Config) Read(path string) error {
+	// read value from openapi difinition
+	urlServer, err := url.Parse(api.ServerUrlDefault)
+	if err != nil {
+		slog.Error("url parse error", "err", err, "url", api.ServerUrlDefault)
+		return err
+	}
+	c.Server.Bind = urlServer.Hostname() // default is a definition of openapi
+	c.Server.Port = urlServer.Port()     // default is a definition of openapi
+
 	f, err := os.ReadFile(path)
 	if err != nil {
 		slog.Error("config read file error", "err", err, "path", path)
 		return err
 	}
 
-	if err := yaml.Unmarshal(f, &c); err != nil {
+	if err := yaml.Unmarshal(f, c); err != nil {
 		slog.Error("yaml unmarshal error", "err", err, "path", path)
 		return err
-	}
-
-	// use definition of openapi if not specified both bind and port
-	if c.Server.Bind == "" && c.Server.Port == "" {
-		// read value from openapi difinition
-		urlServer, err := url.Parse(api.ServerUrlDefault)
-		if err != nil {
-			slog.Error("url parse error", "err", err, "url", api.ServerUrlDefault)
-			return err
-		}
-		c.Server.Bind = urlServer.Hostname()
-		c.Server.Port = urlServer.Port()
 	}
 
 	return nil

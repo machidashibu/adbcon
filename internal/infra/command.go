@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"adbcon/internal/domain"
 	"bufio"
 	"context"
 	"log/slog"
@@ -26,7 +27,7 @@ func NewCommand(name string, args ...string) *Command {
 // Run execute command by sync.
 // Return all output bytes when terminated the command.
 // The output is merged stdout and stderr.
-func (c Command) Run(ctx context.Context) ([]byte, error) {
+func (c Command) Run(ctx context.Context) (domain.CommandResult, error) {
 	// prepare
 	cmd := exec.CommandContext(ctx, c.name, c.args...)
 	cmd.Stderr = cmd.Stdout // merge stdout & stderr
@@ -45,7 +46,7 @@ func (c Command) Run(ctx context.Context) ([]byte, error) {
 // Return channel of output bytes at immediatly.
 // Notify output byte that is each lines via channel.
 // The output is merged stdout and stderr.
-func (c Command) Start(ctx context.Context) (chan []byte, error) {
+func (c Command) Start(ctx context.Context) (domain.CommandCh, error) {
 	// prepare
 	cmd := exec.CommandContext(ctx, string(c.name), c.args...)
 	r, err := cmd.StdoutPipe()
@@ -55,7 +56,7 @@ func (c Command) Start(ctx context.Context) (chan []byte, error) {
 	}
 	cmd.Stderr = cmd.Stdout // merge stdout & stderr
 
-	output := make(chan []byte)
+	output := make(domain.CommandCh)
 
 	// execute
 	if err := cmd.Start(); err != nil {

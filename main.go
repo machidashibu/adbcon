@@ -1,7 +1,9 @@
 package main
 
 import (
+	"adbcon/internal/adapter/handler"
 	"adbcon/internal/infra/config"
+	"adbcon/internal/infra/database"
 	"adbcon/internal/infra/server"
 	"context"
 	"fmt"
@@ -33,19 +35,24 @@ func run() int {
 	// read configuration
 	cfg := new(config.Config)
 	if err := cfg.Read("config.yaml"); err != nil {
-		return abort(err)
+		slog.Warn("config file open error", "err", err)
+		// do not abort here, use default configrations.
 	}
+
+	slog.Info("start application")
 
 	// create application context
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	slog.Info("start application")
+	// parepa database
+	dbStatus := new(database.StubDatabase)
+
 	// start API server
 	apiServer := server.NewEchoServer()
 	apiError := make(chan error, 1)
 	go func() {
-		if err := apiServer.Start(cfg); err != nil {
+		if err := apiServer.Start(cfg, handler.Factory(dbStatus)); err != nil {
 			apiError <- err
 		}
 	}()

@@ -1,6 +1,8 @@
 package server_test
 
 import (
+	"adbcon/internal/adapter/handler"
+	"adbcon/internal/infra/database"
 	"adbcon/internal/infra/server"
 	"net"
 	"testing"
@@ -45,7 +47,7 @@ func TestEchoServer(t *testing.T) {
 	srv := server.NewEchoServer()
 	require.NotNil(t, srv)
 	go func() {
-		require.NoError(t, srv.Start(stubConfig{port: "8080"}))
+		require.NoError(t, srv.Start(stubConfig{port: "8080"}, handler.Factory(database.StubDatabase{})))
 	}()
 
 	// wait 1st server is established
@@ -54,7 +56,7 @@ func TestEchoServer(t *testing.T) {
 	// testing: confrict port
 	srv2nd := server.NewEchoServer()
 	require.NotNil(t, srv2nd)
-	require.Error(t, srv2nd.Start(stubConfig{port: "8080"}))
+	require.Error(t, srv2nd.Start(stubConfig{port: "8080"}, handler.Factory(database.StubDatabase{})))
 
 	// testing: server shutdown
 	require.NoError(t, srv.Shutdown())

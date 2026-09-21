@@ -1,2 +1,3 @@
 server:
+  bind: ""
   port: 12345
