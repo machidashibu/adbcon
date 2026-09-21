@@ -59,7 +59,7 @@ func testGetMainPage(t *testing.T) {
 type stubGetDevicesCommand struct{}
 
 func (s stubGetDevicesCommand) Run(ctx context.Context) (domain.CommandResult, error) {
-	return []byte{}, nil
+	return model.CommandResult{}, nil
 }
 
 type stubGetDevicesPaerser struct {

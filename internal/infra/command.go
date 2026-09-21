@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"adbcon/internal/adapter/model"
 	"adbcon/internal/domain"
 	"bufio"
 	"context"
@@ -39,7 +40,7 @@ func (c Command) Run(ctx context.Context) (domain.CommandResult, error) {
 		return nil, err
 	}
 
-	return output, nil
+	return model.CommandResult(output), nil
 }
 
 // Run execute command by async.

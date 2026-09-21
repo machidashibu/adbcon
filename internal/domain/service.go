@@ -1,20 +1,14 @@
 package domain
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 )
 
-type CommandResult []byte
-
-func (cr CommandResult) Lines() []string {
-	lines := []string{}
-	scan := bufio.NewScanner(bytes.NewReader(cr))
-	for scan.Scan() {
-		lines = append(lines, scan.Text())
-	}
-	return lines
+type CommandResult interface {
+	Bytes() []byte
+	String() string
+	Lines() []string
+	IsEmpty() bool
 }
 
 type CommandCh chan []byte

@@ -40,13 +40,13 @@ func TestCommandRun(t *testing.T) {
 			cmd := infra.NewCommand(tc.command, tc.args...)
 			require.NotNil(t, cmd)
 
-			output, err := cmd.Run(ctx)
+			result, err := cmd.Run(ctx)
 			if tc.failcase {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.NotEmpty(t, output)
-				t.Log(string(output))
+				require.NotEmpty(t, result)
+				t.Log(result.String())
 			}
 		})
 	}

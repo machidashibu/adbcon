@@ -3,8 +3,6 @@ package controller
 import (
 	"adbcon/internal/adapter/model"
 	"adbcon/internal/domain"
-	"bufio"
-	"bytes"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -18,17 +16,18 @@ type AdbDeviceParser struct{}
 func (a AdbDeviceParser) Parse(result domain.CommandResult) (domain.DeviceList, error) {
 	var errorInvalidformat = fmt.Errorf("invalid format: adb devices")
 
-	// prepare
-	devs := domain.DeviceList{}
-	scan := bufio.NewScanner(bytes.NewReader(result))
-	if !scan.Scan() {
+	// validate
+	if result.IsEmpty() {
 		return nil, errorInvalidformat
 	}
 
+	// prepare
+	devs := domain.DeviceList{}
+	lines := result.Lines()
+
 	// parse 1st line (fixed string)
-	text := scan.Text()
-	if text != "List of devices attached" {
-		slog.Error("invalid format at 1st line", "text", text)
+	if lines[0] != "List of devices attached" {
+		slog.Error("invalid format at 1st line", "text", lines[0])
 		return nil, errorInvalidformat
 	}
 
@@ -37,10 +36,7 @@ func (a AdbDeviceParser) Parse(result domain.CommandResult) (domain.DeviceList, 
 	// TODO: support when not established adb server
 	// 	* daemon not running; starting now at tcp:5037
 	//  * daemon started successfully
-	for scan.Scan() {
-		// get 1 line
-		text := scan.Text()
-
+	for _, text := range lines[1:] {
 		// split by spece
 		fields := strings.Fields(text)
 		if len(fields) < 2 {
