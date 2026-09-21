@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync"
 
 	"github.com/labstack/echo/v4"
 )
 
 // SSEReporter reports domain data to user via SSE stream
 type SSEReporter struct {
+	mu   *sync.Mutex
 	resp *echo.Response
 }
 
@@ -23,6 +25,7 @@ func NewSSEReporter(resp *echo.Response) *SSEReporter {
 	resp.Header().Set("X-Accel-Buffering", "'no'")
 
 	return &SSEReporter{
+		mu:   &sync.Mutex{},
 		resp: resp,
 	}
 }
@@ -38,6 +41,8 @@ func (r SSEReporter) ReportDeviceList(devs domain.DeviceList) error {
 	}
 
 	// report
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if _, err := fmt.Fprintf(r.resp.Writer, "data: %s\n\n", string(data)); err != nil {
 		slog.Error("reporter print error", "err", err)
 		return err
@@ -49,11 +54,9 @@ func (r SSEReporter) ReportDeviceList(devs domain.DeviceList) error {
 
 func (r SSEReporter) ReportClose() error {
 	// report
-	if _, err := fmt.Fprintf(r.resp.Writer, "event: close\n"); err != nil {
-		slog.Error("reporter print error", "err", err)
-		return err
-	}
-	if _, err := fmt.Fprintf(r.resp.Writer, "data: SSE connection closed.\n\n"); err != nil {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, err := fmt.Fprintf(r.resp.Writer, "event: close\ndata: SSE connection closed.\n\n"); err != nil {
 		slog.Error("reporter print error", "err", err)
 		return err
 	}
