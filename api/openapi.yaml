@@ -44,7 +44,7 @@ paths:
   /api/adb/shell:
     post:
       summary: Execute adb shell command and report result.
-      description: CommandResult is used for data within SSE response.
+      description: CommandResults is used for data within SSE response.
       operationId: ExecuteAdbShell
       parameters:
         - $ref: "#/components/parameters/CommandArgs"
@@ -130,6 +130,24 @@ components:
       type: array
       items:
         type: string
+    CommandResult:
+      description: Command result with serial.
+      type: object
+      properties:
+        serial:
+          $ref: "#/components/schemas/DeviceSerial"
+        result:
+          type: string
+          example: "PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data."
+      required:
+        - serial
+        - result
+    CommandResults:
+      description: List of command results.
+      type: array
+      items:
+        type: object
+        $ref: "#/components/schemas/CommandResult"
     DeviceSerial:
       description: serial of device.
       type: string

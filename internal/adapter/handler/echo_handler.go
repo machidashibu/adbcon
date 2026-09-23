@@ -26,6 +26,7 @@ func NewEchoHandler(ucAdbDevices *usecase.ExecuteAdbDevicesUsecase) *EchoHandler
 // GetMainPage Get GUI
 // (GET /gui)
 func (h *EchoHandler) GetMainPage(ctx echo.Context) error {
+	slog.Debug("EchoHandler::GetMainPage")
 	// NOTE: This endpoint is not called, because proceeds by statics middleware.
 	return echo.ErrNotFound
 }
@@ -33,6 +34,8 @@ func (h *EchoHandler) GetMainPage(ctx echo.Context) error {
 // GetDevices Execute adb devices command and report device status.
 // (GET /api/devices)
 func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) error {
+	slog.Debug("EchoHandler::GetDevices", "params", params)
+
 	// to domain
 	interval := controller.IntervalToDomain(*params.Interval)
 
@@ -86,6 +89,8 @@ func (h *EchoHandler) ExecuteAdbShell(ctx echo.Context, params api.ExecuteAdbShe
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
+
+	slog.Debug("EchoHandler::ExecuteAdbShell", "params", params, "body", body)
 
 	return nil
 }
