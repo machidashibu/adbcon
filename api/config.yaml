@@ -3,6 +3,7 @@ generate:
   echo-server: true
   models: true
   server-urls: true
+  embedded-spec: true
 output: api-gen.go
 output-options:
-  skip-prune: false
+  skip-prune: true

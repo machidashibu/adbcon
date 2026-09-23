@@ -49,6 +49,10 @@ func AssetsWithConfig(config AssetsConfig) echo.MiddlewareFunc {
 				return next(c) // skip if no config or table is emoty
 			}
 
+			if c.Request().Method != http.MethodGet {
+				return next(c) // skip if method is other than GET
+			}
+
 			// get asset
 			path := c.Request().URL.Path
 			info, ok := config.Assets[path]

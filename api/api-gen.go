@@ -4,9 +4,16 @@
 package api
 
 import (
+	"bytes"
+	"compress/flate"
+	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/url"
+	"path"
+	"strings"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
 )
@@ -37,6 +44,9 @@ func (e DeviceStatus) Valid() bool {
 		return false
 	}
 }
+
+// CommandArgs Command arguments.
+type CommandArgs = []string
 
 // DeviceInfo Devide information.
 type DeviceInfo struct {
@@ -100,8 +110,17 @@ type ProblemDetails struct {
 	Title *string `json:"title,omitempty"`
 }
 
+// SerialList List of device serial.
+type SerialList = []DeviceSerial
+
 // PollingInterval defines model for PollingInterval.
 type PollingInterval = int
+
+// ExecuteAdbShellParams defines parameters for ExecuteAdbShell.
+type ExecuteAdbShellParams struct {
+	// Args List of command arguments.
+	Args *CommandArgs `form:"args,omitempty" json:"args,omitempty"`
+}
 
 // GetDevicesParams defines parameters for GetDevices.
 type GetDevicesParams struct {
@@ -109,9 +128,15 @@ type GetDevicesParams struct {
 	Interval *PollingInterval `form:"interval,omitempty" json:"interval,omitempty"`
 }
 
+// ExecuteAdbShellJSONRequestBody defines body for ExecuteAdbShell for application/json ContentType.
+type ExecuteAdbShellJSONRequestBody = SerialList
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// GetDevices Execute adb devices command.
+	// ExecuteAdbShell Execute adb shell command and report result.
+	// (POST /api/adb/shell)
+	ExecuteAdbShell(ctx echo.Context, params ExecuteAdbShellParams) error
+	// GetDevices Execute adb devices command and report device status.
 	// (GET /api/devices)
 	GetDevices(ctx echo.Context, params GetDevicesParams) error
 	// GetMainPage Get GUI
@@ -122,6 +147,24 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// ExecuteAdbShell converts echo context to params.
+func (w *ServerInterfaceWrapper) ExecuteAdbShell(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ExecuteAdbShellParams
+	// ------------- Optional query parameter "args" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, false, "args", ctx.QueryParams(), &params.Args, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter args: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ExecuteAdbShell(ctx, params)
+	return err
 }
 
 // GetDevices converts echo context to params.
@@ -200,5 +243,126 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 
 	router.GET(options.BaseURL+"/gui", wrapper.GetMainPage, options.OperationMiddlewares["GetMainPage"]...)
 	router.GET(options.BaseURL+"/api/devices", wrapper.GetDevices, options.OperationMiddlewares["GetDevices"]...)
+	router.POST(options.BaseURL+"/api/adb/shell", wrapper.ExecuteAdbShell, options.OperationMiddlewares["ExecuteAdbShell"]...)
 
+}
+
+// Base64 encoded, compressed with deflate, json marshaled OpenAPI spec.
+// Stored as a slice of fixed-width chunks rather than one concatenated
+// const string: with thousands of chunks the chained `+` fold is several
+// times slower for the Go compiler than parsing a slice literal.
+var swaggerSpec = []string{
+	"7Fddr9s2D/4rhN4XaAs4Tk4/gCLAUOScnBXZ1i046YABRS8Ui7bVypIryWmyIv99oOR8OHHSFth2NeQm",
+	"tijyIfXoIf2FZaaqjUbtHRt/YTW3vEKPNjzdmariWkxsER4FuszK2kuj2Zj9Ip0Hk0MWjYDboqnIT8oS",
+	"hmte1QrZmHFbuB8GOnmevEzDL6zWyghk45wrhwmT5O9Tg3bDEqZ5tdvHEuayEitO0f9vMWdj9r/hAfEw",
+	"rrrhMdBtwpzfhNi5sRU9z41SUhcz7dGuuDrPZbcCXlYIubFQxy0pPHaYGS3cE5jlYCrpwVgYgS9RgzZH",
+	"djfgSuOfHCf/4ihVb5sLmcodrONsK6ll1VRsPEqY39Q7uwLteYLbhFl0tdEOwzktFvcP7TM9ZkZ71J7+",
+	"elz7Ia5Q+4HzFnlFLw9Bu0VZLO6hQud4gSk8FtxzWBqxAengp8Vvv1KZKt5NmJHVGL6kabple+DOW6kL",
+	"tiWg3RA7mECxWkQJK5GLHQN5VuLgzmhvjboGdm5NKZfSQ8ZdiSA1LK357NAC12JoLFhUfAMO7Qptl6Ha",
+	"DDIK0wM4YXdGa8xikMvRf0asIdubdv1/RKwHXMnVxQh0PIO3YeVyjGO7QNHF4r4T5/xw+8L9MZhkGarB",
+	"bZPnGN5eiTmVji8Vwo5esNztogrX1qw3KTw2wfzJSVH7zp8AtHf2q/py16cr0mMVbE9c72Nxa/mGnqe4",
+	"khnOdG560sKVFESSSOH2xGprarReYguG9tO/Q1KvXr06zyphlRHYIypv6DXQJSeZjP66zJjLNarBzajP",
+	"aW2NaDLfy3RauOr4AlCHVkb5uyamsXKLaBvEhvvGfeOuaEvnIcU59reWa1cb62E27SC+OVe5oGqfGmlR",
+	"sPG7HfY9nPf7HWb5ATN/OHNqTJfbVSyXg8/Sl6cM2LPr64kGYl2k3WJf6C6ImMSlU5vc3t08fTa9/7Hv",
+	"7Dr1Pdfq8P7Esab+8Y4ZraQm7TF53v5rNG98aaz8E0V4/KjNZ001PaDZbzuDMrdmqbCaoudSub7rFRaC",
+	"SKG1QXyjfvRdM7I993Ef9u3aT6dMj3JjHlEX0saDxcwUmvIA7oBrCN1UU5Et4Lr9384oCVDooGi1NYXl",
+	"FVktuc9KyKUKcc4vzfWSZ0Z08b0Y9bZsL73Ccy8PyEXeKCDxDgVzF9zGGYWSWYQeBqFCvRJ/di8iHb/l",
+	"XkBk6HdehoNWdK8DgZG9Cvy2lI6OkGuYzGcgTBY0PtzEUIbJ9JYaqjMKj5p2W0RGq3ft6mQ+YwlboXXR",
+	"9U06SkeExdSoeS3ZmD1LR+lzoh73ZUhpyGs55GI5dCWqwL7a9BWn7UEP6BrlCW/jUAR8YRwiDZE6DC/H",
+	"DA8kIw8zQUxeY9Z4nIjlIgRLOkP2u/76Hky6s+37KIro/K0Rm5Ppjte1klmIPPzgTieWa8d4RJBtV3hp",
+	"bD2dL5+ORpcc7u2Gx0PoNmHP456/Be2J/vTMlbdcwEOsU0rRX/yr0XtvahqupmuqitvNgRbAxRICCw8f",
+	"UlqAxdAlbSBe3Bo423Yvwlig759sYge8zNb7a2x9jX7axvheop5+ZUWy/sebf443u1mmhzk7OQ/dpCVQ",
+	"0ciLxHmNHipOQz0vwlh5JMC9LHnDpZ7zggaEvkM+/egsfXXy/fYNH4e+sfoKqm5hKIPXv8+ip9gyIm27",
+	"XgXmvFGeph6r2JiV3tduPBwqk3FVGufHL0cvR2z7fvtXAAAA//8=",
+}
+
+// decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,
+// after base64-decoding and flate-decompressing the embedded blob.
+func decodeSpec() ([]byte, error) {
+	encoded := strings.Join(swaggerSpec, "")
+	compressed, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return nil, fmt.Errorf("error base64 decoding spec: %w", err)
+	}
+	zr := flate.NewReader(bytes.NewReader(compressed))
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(zr); err != nil {
+		return nil, fmt.Errorf("read flate: %w", err)
+	}
+	if err := zr.Close(); err != nil {
+		return nil, fmt.Errorf("close flate reader: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+var rawSpec = decodeSpecCached()
+
+// a naive cache of the decoded OpenAPI spec
+func decodeSpecCached() func() ([]byte, error) {
+	data, err := decodeSpec()
+	return func() ([]byte, error) {
+		return data, err
+	}
+}
+
+// Constructs a synthetic filesystem for resolving external references when loading openapi specifications.
+func PathToRawSpec(pathToFile string) map[string]func() ([]byte, error) {
+	res := make(map[string]func() ([]byte, error))
+	if len(pathToFile) > 0 {
+		res[pathToFile] = rawSpec
+	}
+
+	return res
+}
+
+// GetSpec returns the OpenAPI specification corresponding to the generated
+// code in this file. External references in the spec are resolved through
+// PathToRawSpec; externally-referenced files must be embedded in their
+// corresponding Go packages (via the import-mapping feature). URL-based
+// external refs are not supported.
+func GetSpec() (swagger *openapi3.T, err error) {
+	resolvePath := PathToRawSpec("")
+
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	loader.ReadFromURIFunc = func(loader *openapi3.Loader, url *url.URL) ([]byte, error) {
+		pathToFile := url.String()
+		pathToFile = path.Clean(pathToFile)
+		getSpec, ok := resolvePath[pathToFile]
+		if !ok {
+			err1 := fmt.Errorf("path not found: %s", pathToFile)
+			return nil, err1
+		}
+		return getSpec()
+	}
+	var specData []byte
+	specData, err = rawSpec()
+	if err != nil {
+		return
+	}
+	swagger, err = loader.LoadFromData(specData)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// GetSpecJSON returns the raw JSON bytes of the embedded OpenAPI
+// specification: decompressed but not unmarshaled. External references
+// are not resolved here; the bytes are the spec exactly as embedded by
+// codegen. The result is cached at package init time, so repeated calls
+// are cheap.
+func GetSpecJSON() ([]byte, error) {
+	return rawSpec()
+}
+
+// GetSwagger returns the OpenAPI specification corresponding to the
+// generated code in this file.
+//
+// Deprecated: GetSwagger predates kin-openapi renaming openapi3.Swagger
+// to openapi3.T. Use [GetSpec] instead. This wrapper is retained for
+// backwards compatibility.
+func GetSwagger() (*openapi3.T, error) {
+	return GetSpec()
 }

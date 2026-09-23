@@ -30,14 +30,9 @@ func (h *EchoHandler) GetMainPage(ctx echo.Context) error {
 	return echo.ErrNotFound
 }
 
-// GetDevices Execute adb devices command.
+// GetDevices Execute adb devices command and report device status.
 // (GET /api/devices)
 func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) error {
-	// validate
-	if err := params.Validate(); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
-	}
-
 	// to domain
 	interval := controller.IntervalToDomain(*params.Interval)
 
@@ -81,4 +76,16 @@ func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) 
 			}
 		}
 	}
+}
+
+// ExecuteAdbShell Execute adb shell command and report result.
+// (POST /api/adb/shell)
+func (h *EchoHandler) ExecuteAdbShell(ctx echo.Context, params api.ExecuteAdbShellParams) error {
+	// bind body
+	var body api.ExecuteAdbShellJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	return nil
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	oapimiddleware "github.com/oapi-codegen/echo-middleware"
 )
 
 type echoServerConfig interface {
@@ -31,8 +32,52 @@ func (s *EchoServer) Start(ctx context.Context, config echoServerConfig, handler
 	slog.Info("start echo server")
 
 	s.srv.Use(middleware.RequestLogger())
+
+	// apply error handler
+	s.srv.HTTPErrorHandler = func(err error, c echo.Context) {
+		if c.Response().Committed {
+			return // no action if sent response
+		}
+
+		// default
+		code := echo.ErrInternalServerError.Code
+		title := "Internal Server Error"
+		detail := err.Error()
+
+		if errHttp, ok := err.(*echo.HTTPError); ok {
+			// echo errors
+			code = errHttp.Code
+			if msg, ok := errHttp.Message.(string); ok {
+				detail = msg
+			}
+			title = http.StatusText(code)
+		} else {
+			// other errors
+			title = http.StatusText(code)
+		}
+
+		// make ProblemDetails
+		problem := api.ProblemDetails{
+			Title:  &title,
+			Status: &code,
+			Detail: &detail,
+		}
+
+		if err := c.JSON(code, problem); err != nil {
+			c.Logger().Error(err)
+		}
+	}
 	s.srv.Use(middleware.Recover())
-	// set middleware for assets that provides static files
+
+	// apply middleware for validator with Open API definition
+	spec, err := api.GetSpec()
+	if err != nil {
+		slog.Error("get spec error", "err", err)
+		return err
+	}
+	s.srv.Use(oapimiddleware.OapiRequestValidator(spec))
+
+	// apply middleware for assets that provides static files
 	s.srv.Pre(AssetsWithConfig(AssetsConfig{
 		Assets: assetsTable,
 	}))

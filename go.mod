@@ -5,8 +5,10 @@ go 1.26.1
 tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 
 require (
-	github.com/go-openapi/testify/v2 v2.4.2
+	github.com/getkin/kin-openapi v0.142.0
+	github.com/go-openapi/testify/v2 v2.6.0
 	github.com/labstack/echo/v4 v4.15.4
+	github.com/oapi-codegen/echo-middleware v1.1.0
 	github.com/oapi-codegen/runtime v1.7.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -14,13 +16,12 @@ require (
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
-	github.com/getkin/kin-openapi v0.142.0 // indirect
-	github.com/go-openapi/jsonpointer v0.23.1 // indirect
-	github.com/go-openapi/swag/jsonname v0.26.0 // indirect
+	github.com/go-openapi/jsonpointer v1.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/labstack/gommon v0.5.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
-	github.com/mattn/go-isatty v0.0.22 // indirect
+	github.com/mattn/go-isatty v0.0.23 // indirect
 	github.com/oapi-codegen/oapi-codegen/v2 v2.8.0 // indirect
 	github.com/oasdiff/yaml v0.1.1 // indirect
 	github.com/oasdiff/yaml3 v0.0.14 // indirect
