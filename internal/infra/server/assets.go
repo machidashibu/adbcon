@@ -19,12 +19,12 @@ var cssStyles []byte
 //go:embed assets/js/main.js
 var jsMain []byte
 
-//go:embed assets/js/conponents.js
-var jsConponents []byte
+//go:embed assets/js/components.js
+var jsComponents []byte
 
 var assetsTable AssetsMap = AssetsMap{
 	"/gui":           AssetInfo{Ext: ".html", Data: htmlMain},
 	"/styles.css":    AssetInfo{Ext: ".css", Data: cssStyles},
 	"/main.js":       AssetInfo{Ext: ".js", Data: jsMain},
-	"/conponents.js": AssetInfo{Ext: ".js", Data: jsConponents},
+	"/components.js": AssetInfo{Ext: ".js", Data: jsComponents},
 }

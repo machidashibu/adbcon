@@ -1,4 +1,4 @@
-import {DevicesList} from './conponents.js';
+import {DevicesList} from './components.js';
 
 // constants
 const pollingInterval = 5;
