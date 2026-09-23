@@ -35,3 +35,9 @@ $ go build
 Run the generated executable file.
 
 All resource for local server is included in it.
+
+### References
+
+* [Open API v3.0.4](https://spec.openapis.org/oas/v3.0.4.html#encoding-object)
+* [oapi-codegen](https://github.com/oapi-codegen) - Apache-2.0 license
+* [Echo v4](https://echo.labstack.com/) - MIT license
