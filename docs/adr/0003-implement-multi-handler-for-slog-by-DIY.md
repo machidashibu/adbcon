@@ -46,7 +46,7 @@
 -->
 * 1を選択する。
 ### Rationale
-* 今回は勉強もかねてslog.Handlerを自前で実装する。
+* 今回は勉強もかねて`slog.Handler`を自前で実装する。
 
 ## Consequences
 <!--
@@ -56,7 +56,10 @@
   * どのようなトレードオフや課題が残るか？
 -->
 ### Positive Impact (Pros):
-* What benefits or advantages do we gain?
+* 将来的に`slog`に便利機能を入れたいと考えてるのでそのstudyになる。
+  * APIサーバ関連だけ別ファイル出力とか。
+* コンフィグまたはコマンド引数でログレベルを指定する必要がなくなる。
+  * ユーザへの説明周りがすっきりする。
 ### Negative Impact / Trade-offs (Cons):
-* What are the drawbacks, risks, or technical debt we accept?
+* 意図せぬバグを内包する可能性がある。
 
