@@ -7,6 +7,7 @@ import (
 	"adbcon/internal/infra/server"
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -19,12 +20,13 @@ func abort(err error) int {
 
 func main() {
 	// Setup debug logging
-	logw, err := os.Create("adbcom.log")
+	logf, err := os.Create("adbcom.log")
 	if err != nil {
 		fmt.Println("ERROR: Failed to create log file: ", err)
 		panic(err)
 	}
-	defer logw.Close()
+	defer logf.Close()
+	logw := io.MultiWriter(os.Stdout, logf)
 	slog.SetDefault(slog.New(slog.NewJSONHandler(logw, &slog.HandlerOptions{Level: slog.LevelDebug})))
 
 	// run
@@ -52,7 +54,7 @@ func run() int {
 	apiServer := server.NewEchoServer()
 	apiError := make(chan error, 1)
 	go func() {
-		if err := apiServer.Start(cfg, handler.Factory(dbStatus)); err != nil {
+		if err := apiServer.Start(ctx, cfg, handler.Factory(dbStatus)); err != nil {
 			apiError <- err
 		}
 	}()
@@ -60,8 +62,9 @@ func run() int {
 	// wait CTRL+C
 	select {
 	case <-ctx.Done(): // CTRL+C
+		slog.Info("post processing...")
 		// shutdown server
-		if err := apiServer.Shutdown(); err != nil {
+		if err := apiServer.Shutdown(ctx); err != nil {
 			return abort(err)
 		}
 	case err := <-apiError:

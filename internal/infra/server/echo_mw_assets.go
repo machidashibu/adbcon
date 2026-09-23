@@ -9,7 +9,7 @@ import (
 )
 
 // AssetsInfo is a information of asset.
-type AssetsInfo struct {
+type AssetInfo struct {
 	// Ext is a file extention, it is used to resolves content-type.
 	Ext string
 	// Data is a contents of asset.
@@ -18,7 +18,7 @@ type AssetsInfo struct {
 }
 
 // AssetsMap is a map between path and asset contents.
-type AssetsMap map[string]AssetsInfo
+type AssetsMap map[string]AssetInfo
 
 // AssetsConfig is a configuration of Assets middleware.
 type AssetsConfig struct {

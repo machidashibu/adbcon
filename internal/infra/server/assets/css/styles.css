@@ -24,6 +24,30 @@ button:active {
 
 /* special views */
 
+ul.devices-list {
+    list-style-type: none;
+    padding-inline-start: 0px;
+}
+
+li.device-card {
+    background-color: snow;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+    margin: 16px;
+    padding: 8px;
+}
+
+div.device-model {
+    display: inline-block;
+    margin-left: 16px;
+}
+
+div.device-status {
+    display: inline-block;
+    margin-left: 16px;
+}
+
 /* attribute classes */
 
 .hide {

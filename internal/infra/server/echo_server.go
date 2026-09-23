@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -28,7 +27,9 @@ func NewEchoServer() *EchoServer {
 	}
 }
 
-func (s *EchoServer) Start(config echoServerConfig, handler api.ServerInterface) error {
+func (s *EchoServer) Start(ctx context.Context, config echoServerConfig, handler api.ServerInterface) error {
+	slog.Info("start echo server")
+
 	s.srv.Use(middleware.RequestLogger())
 	s.srv.Use(middleware.Recover())
 	// set middleware for assets that provides static files
@@ -37,6 +38,11 @@ func (s *EchoServer) Start(config echoServerConfig, handler api.ServerInterface)
 	}))
 
 	api.RegisterHandlers(s.srv, handler)
+
+	// apply application context
+	s.srv.Server.BaseContext = func(net.Listener) context.Context {
+		return ctx
+	}
 
 	addr := net.JoinHostPort(config.ServerBind(), config.ServerPort())
 	if err := s.srv.StartTLS(addr, serverCert, serverKey); isCiticalError(err) {
@@ -47,9 +53,11 @@ func (s *EchoServer) Start(config echoServerConfig, handler api.ServerInterface)
 	return nil
 }
 
-func (s EchoServer) Shutdown() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+func (s EchoServer) Shutdown(ctx context.Context) error {
+	slog.Info("shutdown echo server")
+
+	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// defer cancel()
 	if err := s.srv.Shutdown(ctx); err != nil {
 		slog.Error("server shutdown error", "err", err)
 		return err

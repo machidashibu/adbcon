@@ -50,7 +50,7 @@ func TestAssets(t *testing.T) {
 			name: "get html",
 			config: server.AssetsConfig{
 				Assets: server.AssetsMap{
-					"/main.html": server.AssetsInfo{
+					"/main.html": server.AssetInfo{
 						Ext:  ".html",
 						Data: testdataHtml,
 					},
@@ -68,7 +68,7 @@ func TestAssets(t *testing.T) {
 			name: "get css",
 			config: server.AssetsConfig{
 				Assets: server.AssetsMap{
-					"/styles.css": server.AssetsInfo{
+					"/styles.css": server.AssetInfo{
 						Ext:  ".css",
 						Data: testdataCss,
 					},
@@ -86,7 +86,7 @@ func TestAssets(t *testing.T) {
 			name: "get JavaScript",
 			config: server.AssetsConfig{
 				Assets: server.AssetsMap{
-					"/script.js": server.AssetsInfo{
+					"/script.js": server.AssetInfo{
 						Ext:  ".js",
 						Data: testdataJs,
 					},
@@ -105,7 +105,7 @@ func TestAssets(t *testing.T) {
 			config: server.AssetsConfig{
 				Skipper: func(c echo.Context) bool { return true },
 				Assets: server.AssetsMap{
-					"/main.html": server.AssetsInfo{
+					"/main.html": server.AssetInfo{
 						Ext:  ".html",
 						Data: testdataHtml,
 					},
@@ -130,7 +130,7 @@ func TestAssets(t *testing.T) {
 			name: "not found assets",
 			config: server.AssetsConfig{
 				Assets: server.AssetsMap{
-					"/main.html": server.AssetsInfo{
+					"/main.html": server.AssetInfo{
 						Ext:  ".html",
 						Data: testdataHtml,
 					},
