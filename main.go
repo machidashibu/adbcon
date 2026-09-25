@@ -4,10 +4,9 @@ import (
 	"adbcon/internal/adapter/handler"
 	"adbcon/internal/infra/config"
 	"adbcon/internal/infra/database"
+	"adbcon/internal/infra/logger"
 	"adbcon/internal/infra/server"
 	"context"
-	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -19,16 +18,6 @@ func abort(err error) int {
 }
 
 func main() {
-	// Setup debug logging
-	logf, err := os.Create("adbcom.log")
-	if err != nil {
-		fmt.Println("ERROR: Failed to create log file: ", err)
-		panic(err)
-	}
-	defer logf.Close()
-	logw := io.MultiWriter(os.Stdout, logf)
-	slog.SetDefault(slog.New(slog.NewJSONHandler(logw, &slog.HandlerOptions{Level: slog.LevelDebug})))
-
 	// run
 	os.Exit(run())
 }
@@ -36,9 +25,12 @@ func main() {
 func run() int {
 	// read configuration
 	cfg := new(config.Config)
-	if err := cfg.Read("config.yaml"); err != nil {
-		slog.Warn("config file open error", "err", err)
-		// do not abort here, use default configrations.
+	cfg.Read("config.yaml")
+	// do not check error, because use default configrations if failed read.
+
+	// setup logger
+	if err := logger.Setup(cfg); err != nil {
+		return abort(err)
 	}
 
 	slog.Info("start application")
