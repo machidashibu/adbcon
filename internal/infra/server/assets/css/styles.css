@@ -1,5 +1,16 @@
 /* common tags */
 
+h3 {
+    display: inline-block;
+    margin-block: 0px;
+    margin: 8px;
+}
+
+details {
+    margin: 8px;
+    padding: 4px;
+}
+
 button {
     border: none;
     box-shadow:inset 0 0 0 1px black;

@@ -29,17 +29,20 @@
             </div>
             <div id="command-progress" class="hide"><div class="spinner"></div> Command executing...</div>
             <div id="command-error" class="hide"></div>
-            <menu class="vertical-option-menu">
-                <li>
-                    <input type="checkbox" id="clear-result" checked />
-                    <label for="clear-result">Clears all result before post the command.</label>
-                </li>
-                <li>
-                    <input type="checkbox" id="fix-result" checked />
-                    <label for="fix-result">Fixes height of result view;</label>
-                    <input type="text" id="fix-result-height" size="4" value="5" /> lines
-                </li>
-            </menu>
+            <details>
+                <summary><h3>Options</h3></summary>
+                <menu class="vertical-option-menu">
+                    <li>
+                        <input type="checkbox" id="clear-result" checked />
+                        <label for="clear-result">Clears all result before post the command.</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="fix-result" checked />
+                        <label for="fix-result">Fixes height of result view;</label>
+                        <input type="text" id="fix-result-height" size="4" value="5" /> lines
+                    </li>
+                </menu>
+            </details>
         </div>
         <div> <!-- devices list field -->
             <h2>Devices List</h2>
