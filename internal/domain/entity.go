@@ -9,6 +9,7 @@ const (
 	CommandAdb     CommandName = "adb"
 	CommandDevices CommandName = "devices"
 	CommandShell   CommandName = "shell"
+	CommandReboot  CommandName = "reboot"
 	CommandRoot    CommandName = "root"
 	CommandUnroot  CommandName = "unroot"
 )

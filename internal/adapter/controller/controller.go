@@ -28,11 +28,18 @@ func DeviceStatusToDomain(status string) domain.DeviceStatus {
 	return domain.DeviceStatus(status)
 }
 
-func CommandArgsToComain(args *api.CommandArgs) []string {
+func CommandArgsToDomain(args *api.CommandArgs) []string {
 	if args == nil {
 		return []string{}
 	}
 	return []string(*args)
+}
+
+func RebootArgsToDomain(args *api.RebootArgs) []string {
+	if args == nil {
+		return []string{}
+	}
+	return []string{string(*args)}
 }
 
 func SerialListToDomain(list api.SerialList) (domain.SerialList, error) {

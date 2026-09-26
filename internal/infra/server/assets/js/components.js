@@ -57,26 +57,50 @@ export class DevicesList {
         return list;
     }
 
-    showAllResult() {
-        this.#list.forEach((dev) => dev.showResult());
-    }
-
-    clearAllResult() {
-        this.#list.forEach((dev) => dev.clearResult());
-    }
-
-    addResult(serial, text) {
-        const device = this.findDevice(serial);   // find existing device
-        if(!device) {
-            console.error('unknown serial: ', serial);
-            return;
+    showResult(...serials) {
+        if(serials.length == 0) {
+            // all
+            this.#list.forEach((dev) => dev.showResult());
+        } else {
+            // target only
+            this.#list.forEach((dev) => {
+                if(serials.includes(dev.serial())) {
+                    dev.showResult();
+                }
+            });
         }
-
-        device.addResult(text);
     }
 
-    addAllResult(text) {
-        this.#list.forEach((dev) => dev.addResult(text));
+    clearResult(...serials) {
+        if(serials.length == 0) {
+            // all
+            this.#list.forEach((dev) => dev.clearResult());
+        } else {
+            // target only
+            this.#list.forEach((dev) => {
+                if(serials.includes(dev.serial())) {
+                    dev.clearResult();
+                }
+            });
+        }
+    }
+
+    addResult(text, ...serials) {
+        if(serials.length == 0) {
+            // all
+            this.#list.forEach((dev) => {
+                dev.addResult(text);
+                dev.showResult();
+            });
+        } else {
+            // target only
+            this.#list.forEach((dev) => {
+                if(serials.includes(dev.serial())) {
+                    dev.addResult(text);
+                    dev.showResult();
+                }
+            });
+        }
     }
 }
 

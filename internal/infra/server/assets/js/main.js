@@ -61,22 +61,22 @@ window.onload = () => {
         }
 
         // show result view f all devices
-        devices.showAllResult();
+        // devices.showResult(targets);
         // clear all result
         if(command.isClearResult()) {
-            devices.clearAllResult();
+            devices.clearResult();
         }
 
         // fetch to server
         command.running();
-        devices.addAllResult(command.text());
+        devices.addResult(command.text(), ...targets);
         PostAdbCommand(command.name(), targets, command.args(), 
             (data, disconnected) => {
                 if(disconnected) {
                     command.completed();
                 } else {
                     console.log('update command result: ', data);
-                    devices.addResult(data.serial, data.result);
+                    devices.addResult(data.result, data.serial);
                 }
             },
             (message) => {

@@ -45,6 +45,30 @@ func (e DeviceStatus) Valid() bool {
 	}
 }
 
+// Defines values for RebootArgs.
+const (
+	Bootloader         RebootArgs = "bootloader"
+	Recovery           RebootArgs = "recovery"
+	Sideload           RebootArgs = "sideload"
+	SideloadAutoReboot RebootArgs = "sideload-auto-reboot"
+)
+
+// Valid indicates whether the value is a known member of the RebootArgs enum.
+func (e RebootArgs) Valid() bool {
+	switch e {
+	case Bootloader:
+		return true
+	case Recovery:
+		return true
+	case Sideload:
+		return true
+	case SideloadAutoReboot:
+		return true
+	default:
+		return false
+	}
+}
+
 // CommandArgs Command arguments.
 type CommandArgs = []string
 
@@ -124,6 +148,9 @@ type ProblemDetails struct {
 	Title *string `json:"title,omitempty"`
 }
 
+// RebootArgs argument list for adb reboot.
+type RebootArgs string
+
 // SerialList List of device serial.
 type SerialList = []DeviceSerial
 
@@ -132,6 +159,12 @@ type PollingInterval = int
 
 // TargetList List of device serial.
 type TargetList = SerialList
+
+// ExecuteAdbRebootParams defines parameters for ExecuteAdbReboot.
+type ExecuteAdbRebootParams struct {
+	// Args Command arguments.
+	Args *RebootArgs `form:"args,omitempty" json:"args,omitempty"`
+}
 
 // ExecuteAdbShellParams defines parameters for ExecuteAdbShell.
 type ExecuteAdbShellParams struct {
@@ -145,6 +178,9 @@ type GetDevicesParams struct {
 	Interval *PollingInterval `form:"interval,omitempty" json:"interval,omitempty"`
 }
 
+// ExecuteAdbRebootJSONRequestBody defines body for ExecuteAdbReboot for application/json ContentType.
+type ExecuteAdbRebootJSONRequestBody = SerialList
+
 // ExecuteAdbRootJSONRequestBody defines body for ExecuteAdbRoot for application/json ContentType.
 type ExecuteAdbRootJSONRequestBody = SerialList
 
@@ -156,6 +192,9 @@ type ExecuteAdbUnrootJSONRequestBody = SerialList
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// ExecuteAdbReboot Execute adb reroot command and report result.
+	// (POST /api/adb/reboot)
+	ExecuteAdbReboot(ctx echo.Context, params ExecuteAdbRebootParams) error
 	// ExecuteAdbRoot Execute adb root command and report result.
 	// (POST /api/adb/root)
 	ExecuteAdbRoot(ctx echo.Context) error
@@ -176,6 +215,24 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// ExecuteAdbReboot converts echo context to params.
+func (w *ServerInterfaceWrapper) ExecuteAdbReboot(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ExecuteAdbRebootParams
+	// ------------- Optional query parameter "args" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, false, "args", ctx.QueryParams(), &params.Args, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter args: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ExecuteAdbReboot(ctx, params)
+	return err
 }
 
 // ExecuteAdbRoot converts echo context to params.
@@ -291,6 +348,7 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 	router.GET(options.BaseURL+"/gui", wrapper.GetMainPage, options.OperationMiddlewares["GetMainPage"]...)
 	router.GET(options.BaseURL+"/api/devices", wrapper.GetDevices, options.OperationMiddlewares["GetDevices"]...)
 	router.POST(options.BaseURL+"/api/adb/shell", wrapper.ExecuteAdbShell, options.OperationMiddlewares["ExecuteAdbShell"]...)
+	router.POST(options.BaseURL+"/api/adb/reboot", wrapper.ExecuteAdbReboot, options.OperationMiddlewares["ExecuteAdbReboot"]...)
 	router.POST(options.BaseURL+"/api/adb/root", wrapper.ExecuteAdbRoot, options.OperationMiddlewares["ExecuteAdbRoot"]...)
 	router.POST(options.BaseURL+"/api/adb/unroot", wrapper.ExecuteAdbUnroot, options.OperationMiddlewares["ExecuteAdbUnroot"]...)
 
@@ -301,31 +359,32 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"ZabjsVAJE4Uydno6OZ3Qx/eP/wQAAP//",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,
