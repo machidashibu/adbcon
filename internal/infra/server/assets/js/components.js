@@ -39,8 +39,6 @@ export class DevicesList {
     }
 
     findDevice(serial) {
-        console.debug('Deviceist::findDevice', `serial=`, serial);
-
         for(const info of this.#list) {
             if(info.serial() == serial) {
                 return info;
@@ -50,34 +48,24 @@ export class DevicesList {
     }
 
     enabledDevices() {
-        console.debug('Deviceist::enabledDevices');
-
         let list = [];
-        for(const info of this.#list) {
-            if(info.enabled()) {
-                list.push(info.serial());
-            }
-        }
+        this.#list.forEach((dev) => {
+            if(dev.enabled()) {
+                list.push(dev.serial());
+            }            
+        })
         return list;
     }
 
     showAllResult() {
-        console.debug("Deviceist::showAllDevideResult");
-
-        for(const info of this.#list) {
-            info.showResult();
-        }
+        this.#list.forEach((dev) => dev.showResult());
     }
 
     clearAllResult() {
-        console.debug("Deviceist::clearAllResult");
-
         this.#list.forEach((dev) => dev.clearResult());
     }
 
     addResult(serial, text) {
-        console.debug("Deviceist::addResult", "serial=", serial, "text=", text);
-
         const device = this.findDevice(serial);   // find existing device
         if(!device) {
             console.error('unknown serial: ', serial);
@@ -85,6 +73,10 @@ export class DevicesList {
         }
 
         device.addResult(text);
+    }
+
+    addAllResult(text) {
+        this.#list.forEach((dev) => dev.addResult(text));
     }
 }
 
@@ -202,8 +194,58 @@ export class CommandResult {
             this.#view.classList.add('hide');
         }        
     }
+}
 
+export class CommandPalette {
+    #viewName;
+    #viewArgs;
+    #viewPost;
+    #viewError;
+    #viewClearResult;
 
+    constructor(view) {
+        this.#viewName = document.getElementById('command-name');
+        this.#viewArgs = document.getElementById('command-arguments');
+        this.#viewPost = document.getElementById('command-post');
+        this.#viewError = document.getElementById('command-error');
+        this.#viewClearResult = document.getElementById('clear-result');
 
+        // add selected event to command name
+        this.#viewName.addEventListener('change', () => {
+            // clear arguments
+            this.#viewArgs.value = '';
+        })
+    }
 
+    clear() {
+        this.#viewError.textContent = '';
+        this.#viewError.classList.remove('show');
+        this.#viewError.classList.add('hide');
+    }
+    
+    error(message) {
+        this.#viewError.classList.remove('hide');
+        this.#viewError.classList.add('show');
+        this.#viewError.textContent = message;
+    }
+
+    name() { return this.#viewName.value; }
+
+    args() {
+        const value = this.#viewArgs.value.trim();
+        if(value) {
+            return value.split(/\s+/);
+        } else {
+            return [];
+        }
+    }
+
+    text() {
+        return '> ' + this.#viewName.options[this.#viewName.selectedIndex].text + ' ' + this.#viewArgs.value;
+    }
+
+    lock() { this.#viewPost.disabled = true; }
+    unlock() { this.#viewPost.disabled = false; }
+
+    isClearResult() { return this.#viewClearResult.checked; }
 }

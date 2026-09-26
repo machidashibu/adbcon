@@ -2,8 +2,10 @@ export async function PostAdbCommand(cmd, targets, args, success, fail) {
     console.debug("post adb command", "cmd=", cmd, "targets=", targets, "args=", args);
 
     // name URL
-    const param = args.join(',') //TODO: join args by ','
-    const url = "/api/" + cmd + "?args=" + encodeURI(param);
+    var url = "/api/" + cmd;
+    if(args && args.length != 0) {
+        url += "?args=" + encodeURI(args.join(','));
+    } 
 
     try {
         // fetch

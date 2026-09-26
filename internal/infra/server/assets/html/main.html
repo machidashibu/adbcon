@@ -14,12 +14,14 @@
         <h1>ADB Console</h1>
     </header>
     <main>
-        <div> <!-- command palette field -->
+        <div id="command-palette"> <!-- command palette field -->
             <h2>Command Palette</h2>
             <div class="console">
                 &gt;
                 <select id="command-name">
                     <option value="adb/shell" selected>adb shell</option>
+                    <option value="adb/root">adb root</option>
+                    <option value="adb/unroot">adb unroot</option>
                 </select>
                 <input type="text" id="command-arguments" placeholder="Enter command arguments" size="64" />
                 <button id="command-post">POST</button>

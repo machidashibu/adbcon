@@ -1,4 +1,4 @@
-import {DevicesList} from './components.js';
+import {CommandPalette, DevicesList} from './components.js';
 import {PostAdbCommand} from './api.js';
 
 // constants
@@ -6,6 +6,7 @@ const pollingInterval = 5;
 
 // gloval variables
 const devices = new DevicesList(document.getElementById('devices-list-contaier'));
+const command = new CommandPalette(document.getElementById('command-palette'));
 var pollingStatus = null;
 
 // entry point
@@ -47,46 +48,32 @@ window.onload = () => {
 
     // add command post event
     document.getElementById('command-post').addEventListener('click', (e) => {
-        console.log("command post", "self=",self);
+        console.log("command post");
 
         // clear and hide command error view
-        // TODO: implements as compoment
-        const view_error = document.getElementById('command-error');
-        view_error.textContent = '';
-        view_error.classList.remove('show');
-        view_error.classList.add('hide');
+        command.clear();
 
         // get target serials
         const targets = devices.enabledDevices();
         if(targets.length == 0) {
-            view_error.classList.remove('hide');
-            view_error.classList.add('show');
-            view_error.textContent = 'ERROR: Please select target device(s) more one.';
+            command.error('ERROR: Please select target device(s) more one.');
             return;
         }
 
-        // get args and convert to array
-        const view_args = document.getElementById('command-arguments');
-        const args = view_args.value.trim().split(/\s+/);
-        
         // show result view f all devices
         devices.showAllResult();
-        const view_all_clear = document.getElementById('clear-result');
-        if(view_all_clear.checked) {
-            // clear all result
+        // clear all result
+        if(command.isClearResult()) {
             devices.clearAllResult();
         }
 
-        // disable post button
-        const post_button = e.currentTarget
-        post_button.disabled = true;
-
         // fetch to server
-        PostAdbCommand('adb/shell', targets, args, 
+        command.lock();
+        devices.addAllResult(command.text());
+        PostAdbCommand(command.name(), targets, command.args(), 
             (data, disconnected) => {
                 if(disconnected) {
-                    // enable post button if disconnected SSE
-                    post_button.disabled = false;
+                    command.unlock();
                 } else {
                     console.log('update command result: ', data);
                     devices.addResult(data.serial, data.result);
@@ -94,11 +81,8 @@ window.onload = () => {
             },
             (message) => {
                 console.error('command error: ', message);
-                view_error.classList.remove('hide');
-                view_error.classList.add('show');
-                view_error.textContent = 'ERROR: ' + message;
-                // enable post button
-                post_button.disabled = false;
+                command.error('ERROR: ' + message);
+                command.unlock();
             }
         )
     });
