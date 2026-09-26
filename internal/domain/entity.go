@@ -2,7 +2,7 @@ package domain
 
 import "time"
 
-// Supported command name
+// CommandName is a supported command name.
 type CommandName string
 
 const (
@@ -11,22 +11,24 @@ const (
 	CommandShell   CommandName = "shell"
 )
 
-// Polling interval
+// Interval is a polling interval to execute command.
 type Interval time.Duration
 
-// device status
+// DeviceStatus is a status of device.
 type DeviceStatus string
 
 const (
+	// Unknown is a common unknown status.
 	Unknown = "unknown"
 
-	Online        DeviceStatus = "online"
-	Offline       DeviceStatus = "offline"
+	Online  DeviceStatus = "online"
+	Offline DeviceStatus = "offline"
+	// UnknownDeviceis a unknown status for device.
 	UnknownDevice DeviceStatus = "unknown"
 	Unauthorized  DeviceStatus = "unauthorized"
 )
 
-// device einformation
+// DeviceInfo is a device information.
 type DeviceInfo interface {
 	Serial() string
 	Status() DeviceStatus
@@ -36,5 +38,16 @@ type DeviceInfo interface {
 	TransportId() int
 }
 
-// list of device information
+// DeviceList is a list of device information.
 type DeviceList []DeviceInfo
+
+// SerialList is a list of device serial.
+type SerialList []string
+
+// CommandResult is a result of command with device serial.
+// It indicates an error by `Error` and `Text` is an error message if error is occurred.
+type CommandResult interface {
+	Serial() string
+	Text() string
+	Error() error
+}
