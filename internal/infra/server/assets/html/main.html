@@ -16,8 +16,14 @@
     <main>
         <div> <!-- command palette field -->
             <h2>Command Palette</h2>
-            <input type="text" id="command-arguments" class="console" placeholder="Enter command arguments" size="64" />
-            <button id="command-post">POST</button>
+            <div class="console">
+                &gt;
+                <select id="command-name">
+                    <option value="adb/shell" selected>adb shell</option>
+                </select>
+                <input type="text" id="command-arguments" placeholder="Enter command arguments" size="64" />
+                <button id="command-post">POST</button>
+            </div>
             <menu class="vertical-option-menu">
                 <li>
                     <input type="checkbox" id="clear-result" checked />
