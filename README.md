@@ -3,6 +3,13 @@
 This tool provides GUI for ADB command on WEB browser.
 ***adbcon*** is an acronym of ***ADB Console***.
 
+> [!CAUTION]
+> This tool accesses local resources (e.g., smartphones, local storage). You **MUST NOT** expose the TCP port used by this tool to the internet.
+
+## Sample
+
+![Sample screen](docs/sample.png)
+
 ## Get started
 
 ### Build
@@ -34,7 +41,13 @@ $ go build
 
 Run the generated executable file.
 
-All resource for local server is included in it.
+```bash
+$ adbcon
+```
+
+Access to `https://localhost:8080/gui` by WEB browser.
+
+You may ignore if the browser notifies means "access to not secure page".
 
 ### References
 
