@@ -203,7 +203,11 @@ export class CommandResult {
 
     view() { return this.#view; }
     clear() { this.#view.textContent = ''; }
-    add(text) { this.#view.textContent += text + '\n'; }
+    add(text) {
+        this.#view.textContent += text + '\n';
+        // scrool to bottom
+        this.#view.scrollTop = this.#view.scrollHeight;
+    }
     show() { this.#view.classList.remove('hide'); }
     hide() { this.#view.classList.add('hide'); }
 }
@@ -215,6 +219,10 @@ export class CommandPalette {
     #viewProgress;
     #viewError;
     #viewClearResult;
+    #viewFixResult;
+    #viewFixResultHeight;
+
+    #cssDeviceConsole;
 
     constructor(view) {
         this.#viewName = document.getElementById('command-name');
@@ -223,11 +231,33 @@ export class CommandPalette {
         this.#viewProgress = document.getElementById('command-progress');
         this.#viewError = document.getElementById('command-error');
         this.#viewClearResult = document.getElementById('clear-result');
+        this.#viewFixResult = document.getElementById('fix-result');
+        this.#viewFixResultHeight = document.getElementById('fix-result-height');
+
+        this.#cssDeviceConsole = new CSS('pre.device-console');
 
         // add selected event to command name
         this.#viewName.addEventListener('change', () => {
             // clear arguments
             this.#viewArgs.value = '';
+        });
+        // add checked event to fix result height
+        this.#viewFixResult.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                // enable max-height
+                const height = this.#viewFixResultHeight.value * 1.5;
+                this.#cssDeviceConsole.set('max-height', height + 'em');
+            } else {
+                // disable max-height
+                this.#cssDeviceConsole.remove('max-height');
+            }
+        });
+        this.#viewFixResultHeight.addEventListener('change', () => {
+            if(this.#viewFixResult.checked) {
+                // reset max-height if checked
+                const height = this.#viewFixResultHeight.value * 1.5;
+                this.#cssDeviceConsole.set('max-height', height + 'em');                
+            }
         })
     }
 
@@ -270,4 +300,46 @@ export class CommandPalette {
     unlock() { this.#viewPost.disabled = false; }
 
     isClearResult() { return this.#viewClearResult.checked; }
+}
+
+export class CSS {
+    #rule;
+
+    constructor(selector) {
+        this.#rule = this.#get(selector);
+        if(!this.#rule) {
+            console.warn('selector is not found: ', selector);
+        }
+    }
+
+    #get(selector) {
+        for (const sheet of document.styleSheets) {
+            try {
+            // CORS error remediation
+            const rules = sheet.cssRules || sheet.rules;
+            if (!rules) continue;
+
+            for (const rule of rules) {
+                if (rule.selectorText === selector) {
+                    return rule;
+                }
+            }
+            } catch (e) {
+                continue;   // skip if external css
+            }
+        }
+        return null;
+    }
+
+    set(name, value) {
+        if (this.#rule) {
+            this.#rule.style.setProperty(name, value);
+        }
+    }
+
+    remove(name) {
+        if (this.#rule) {
+            this.#rule.style.removeProperty(name);
+        }        
+    }
 }
