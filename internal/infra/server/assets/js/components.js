@@ -112,7 +112,7 @@ export class DeviceCard {
         // create label for serial
         const viewLabel = document.createElement('label');
         viewLabel.textContent = this.#serial;
-        viewLabel.for = this.#viewEnabled.id;
+        viewLabel.htmlFor = this.#viewEnabled.id;
 
         // create div for model
         const viewModel = document.createElement('div');
@@ -180,26 +180,15 @@ export class CommandResult {
     view() { return this.#view; }
     clear() { this.#view.textContent = ''; }
     add(text) { this.#view.textContent += text + '\n'; }
-
-    show() {
-        if(this.#view.classList.contains('hide')) {
-            this.#view.classList.remove('hide');
-            this.#view.classList.add('show');
-        }
-    }
-
-    hide() {
-        if(this.#view.classList.contains('show')) {
-            this.#view.classList.remove('show');
-            this.#view.classList.add('hide');
-        }        
-    }
+    show() { this.#view.classList.remove('hide'); }
+    hide() { this.#view.classList.add('hide'); }
 }
 
 export class CommandPalette {
     #viewName;
     #viewArgs;
     #viewPost;
+    #viewProgress;
     #viewError;
     #viewClearResult;
 
@@ -207,6 +196,7 @@ export class CommandPalette {
         this.#viewName = document.getElementById('command-name');
         this.#viewArgs = document.getElementById('command-arguments');
         this.#viewPost = document.getElementById('command-post');
+        this.#viewProgress = document.getElementById('command-progress');
         this.#viewError = document.getElementById('command-error');
         this.#viewClearResult = document.getElementById('clear-result');
 
@@ -219,13 +209,11 @@ export class CommandPalette {
 
     clear() {
         this.#viewError.textContent = '';
-        this.#viewError.classList.remove('show');
         this.#viewError.classList.add('hide');
     }
     
     error(message) {
         this.#viewError.classList.remove('hide');
-        this.#viewError.classList.add('show');
         this.#viewError.textContent = message;
     }
 
@@ -242,6 +230,16 @@ export class CommandPalette {
 
     text() {
         return '> ' + this.#viewName.options[this.#viewName.selectedIndex].text + ' ' + this.#viewArgs.value;
+    }
+
+    running() {
+        this.#viewProgress.classList.remove('hide');
+        this.lock();
+    }
+
+    completed() {
+        this.#viewProgress.classList.add('hide');
+        this.unlock();
     }
 
     lock() { this.#viewPost.disabled = true; }

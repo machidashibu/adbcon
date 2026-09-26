@@ -68,12 +68,12 @@ window.onload = () => {
         }
 
         // fetch to server
-        command.lock();
+        command.running();
         devices.addAllResult(command.text());
         PostAdbCommand(command.name(), targets, command.args(), 
             (data, disconnected) => {
                 if(disconnected) {
-                    command.unlock();
+                    command.completed();
                 } else {
                     console.log('update command result: ', data);
                     devices.addResult(data.serial, data.result);
@@ -82,7 +82,7 @@ window.onload = () => {
             (message) => {
                 console.error('command error: ', message);
                 command.error('ERROR: ' + message);
-                command.unlock();
+                command.completed();
             }
         )
     });

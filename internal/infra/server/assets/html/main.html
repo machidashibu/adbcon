@@ -26,13 +26,14 @@
                 <input type="text" id="command-arguments" placeholder="Enter command arguments" size="64" />
                 <button id="command-post">POST</button>
             </div>
+            <div id="command-progress" class="hide"><div class="spinner"></div> Command executing...</div>
+            <div id="command-error" class="hide"></div>
             <menu class="vertical-option-menu">
                 <li>
                     <input type="checkbox" id="clear-result" checked />
                     <label for="clear-result">Clears all result before post the command.</label>
                 </li>
             </menu>
-            <div id="command-error" class="hide"></div>
         </div>
         <div> <!-- devices list field -->
             <h2>Devices List</h2>

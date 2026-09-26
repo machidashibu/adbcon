@@ -17,9 +17,11 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* button:focus {
-    box-shadow:inset 0 0 0 2px black;
-} */
+/* common views */
+
+menu.vertical-option-menu {
+    list-style-type: none;
+}
 
 /* special views */
 
@@ -35,10 +37,6 @@ input#command-arguments {
     font-size: large;
     background-color: black;
     border: none;
-}
-
-menu.vertical-option-menu {
-    list-style-type: none;
 }
 
 div#command-error {
@@ -75,6 +73,32 @@ pre.device-console {
     word-break: break-all;
 }
 
+div#command-progress {
+    display: flex;
+    align-items: center;
+    margin: 8px;
+}
+
+div.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 /* attribute classes */
 
 .console {
@@ -86,11 +110,7 @@ pre.device-console {
 }
 
 .hide {
-    visibility: hidden !important;
-}
-
-.show {
-    visibility: visible !important;
+    display: none !important;
 }
 
 .online {
