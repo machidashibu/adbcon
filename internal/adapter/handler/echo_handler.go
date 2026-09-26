@@ -37,7 +37,7 @@ func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) 
 	slog.Debug("EchoHandler::GetDevices", "params", params)
 
 	// to domain
-	interval := controller.IntervalToDomain(*params.Interval)
+	interval, ok := controller.IntervalToDomain(params.Interval)
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response())
@@ -56,29 +56,34 @@ func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) 
 		// return ctx.JSON(http.StatusInternalServerError, apiconv.MakeInternalServerError(err))
 	}
 
-	// start monitoring
-	polling := time.NewTicker(time.Duration(interval))
-	defer polling.Stop()
-	for {
-		select {
-		case <-ctx.Request().Context().Done():
-			return nil // disconnect
-		case <-polling.C:
-			// call usecase: execute command (periodical update status)
-			updated, err := h.ucAdbDevices.Execute(ctx.Request().Context())
-			if err != nil {
-				slog.Error("adb devices usecase error", "err", err)
-				return nil // disconnect from server
-				// return ctx.JSON(http.StatusInternalServerError, apiconv.MakeInternalServerError(err))
-			}
-			// report to client
-			if err := reporter.ReportDeviceList(updated); err != nil {
-				slog.Error("device list report error", "err", err, "updated", updated)
-				return nil // disconnect from server
-				// return ctx.JSON(http.StatusInternalServerError, apiconv.MakeInternalServerError(err))
+	// proceeds polling if interval is specified in query
+	if ok {
+		// start monitoring
+		polling := time.NewTicker(time.Duration(interval))
+		defer polling.Stop()
+		for {
+			select {
+			case <-ctx.Request().Context().Done():
+				return nil // disconnect
+			case <-polling.C:
+				// call usecase: execute command (periodical update status)
+				updated, err := h.ucAdbDevices.Execute(ctx.Request().Context())
+				if err != nil {
+					slog.Error("adb devices usecase error", "err", err)
+					return nil // disconnect from server
+					// return ctx.JSON(http.StatusInternalServerError, apiconv.MakeInternalServerError(err))
+				}
+				// report to client
+				if err := reporter.ReportDeviceList(updated); err != nil {
+					slog.Error("device list report error", "err", err, "updated", updated)
+					return nil // disconnect from server
+					// return ctx.JSON(http.StatusInternalServerError, apiconv.MakeInternalServerError(err))
+				}
 			}
 		}
 	}
+
+	return nil
 }
 
 // ExecuteAdbShell Execute adb shell command and report result.
