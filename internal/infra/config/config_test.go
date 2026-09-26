@@ -17,9 +17,9 @@ func TestConfig(t *testing.T) {
 	}
 	testcases := []testcase{
 		{
-			name:      "read error",
-			path:      "config.yaml",
-			readError: true,
+			name: "read error",
+			path: "config.yaml",
+			// readError: true,	// Change spec. : It did not error if file is not existing
 			result: map[string]any{
 				"bind": "localhost",
 				"port": "8080",

@@ -39,6 +39,9 @@ func (c *Config) Read(path string) error {
 	c.Server.Bind = urlServer.Hostname() // default is a definition of openapi
 	c.Server.Port = urlServer.Port()     // default is a definition of openapi
 
+	// check file existing
+	// Change spec. : It did not error if file is not existing,
+	// because application uses default configuration if config file is not existing.
 	if _, err := os.Stat(path); err != nil {
 		slog.Info("used default config")
 		return nil

@@ -2,6 +2,7 @@ package server
 
 import (
 	"adbcon/api"
+	"adbcon/internal/adapter/handler"
 	"context"
 	"errors"
 	"log/slog"
@@ -28,45 +29,13 @@ func NewEchoServer() *EchoServer {
 	}
 }
 
-func (s *EchoServer) Start(ctx context.Context, config echoServerConfig, handler api.ServerInterface) error {
+func (s *EchoServer) Start(ctx context.Context, config echoServerConfig, h api.ServerInterface) error {
 	slog.Info("start echo server")
 
 	s.srv.Use(middleware.RequestLogger())
 
 	// apply error handler
-	s.srv.HTTPErrorHandler = func(err error, c echo.Context) {
-		if c.Response().Committed {
-			return // no action if sent response
-		}
-
-		// default
-		code := echo.ErrInternalServerError.Code
-		title := "Internal Server Error"
-		detail := err.Error()
-
-		if errHttp, ok := err.(*echo.HTTPError); ok {
-			// echo errors
-			code = errHttp.Code
-			if msg, ok := errHttp.Message.(string); ok {
-				detail = msg
-			}
-			title = http.StatusText(code)
-		} else {
-			// other errors
-			title = http.StatusText(code)
-		}
-
-		// make ProblemDetails
-		problem := api.ProblemDetails{
-			Title:  &title,
-			Status: &code,
-			Detail: &detail,
-		}
-
-		if err := c.JSON(code, problem); err != nil {
-			c.Logger().Error(err)
-		}
-	}
+	s.srv.HTTPErrorHandler = handler.EchoErrorHandler
 	s.srv.Use(middleware.Recover())
 
 	// apply middleware for validator with Open API definition
@@ -82,7 +51,7 @@ func (s *EchoServer) Start(ctx context.Context, config echoServerConfig, handler
 		Assets: assetsTable,
 	}))
 
-	api.RegisterHandlers(s.srv, handler)
+	api.RegisterHandlers(s.srv, h)
 
 	// apply application context
 	s.srv.Server.BaseContext = func(net.Listener) context.Context {
