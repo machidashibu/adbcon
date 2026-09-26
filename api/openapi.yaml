@@ -47,7 +47,15 @@ paths:
       description: CommandResults is used for data within SSE response.
       operationId: ExecuteAdbShell
       parameters:
-        - $ref: "#/components/parameters/CommandArgs"
+        - name: args
+          description: Command arguments.
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/CommandArgs"
+          example: args=ping,-n,4,8.8.8.8
       requestBody:
         content:
           application/json:
@@ -197,6 +205,7 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/DeviceSerial"
+      minLength: 1
     ProblemDetails:
       description: Details for error response.
       type: object

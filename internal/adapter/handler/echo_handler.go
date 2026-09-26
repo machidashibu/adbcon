@@ -5,6 +5,9 @@ import (
 	"adbcon/internal/adapter/controller"
 	"adbcon/internal/adapter/presenter"
 	"adbcon/internal/adapter/presenter/apiconv"
+	"adbcon/internal/adapter/service"
+	"adbcon/internal/domain"
+	"adbcon/internal/infra"
 	"adbcon/internal/usecase"
 	"log/slog"
 	"net/http"
@@ -96,6 +99,37 @@ func (h *EchoHandler) ExecuteAdbShell(ctx echo.Context, params api.ExecuteAdbShe
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbShell", "params", params, "body", body)
+
+	// convert to domain (with validate)
+	args := controller.CommandArgsToComain(&params.Args)
+	targets, err := controller.SerialListToDomain(body)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	// parepare commands
+	exec := service.NewMultiCommand()
+	for _, serial := range targets {
+		cmd := infra.NewAdbCommandWithSerial(domain.CommandShell, serial, args...)
+		exec.Add(serial, cmd)
+	}
+
+	// prepare reporter
+	reporter := presenter.NewSSEReporter(ctx.Response())
+
+	// start command
+	ch := exec.Start(ctx.Request().Context())
+	for {
+		result, ok := <-ch
+		if !ok {
+			reporter.ReportClose()
+			break
+		}
+		if err := reporter.ReportCommandResult(result); err != nil {
+			slog.Error("command result report error", "err", err, "result", result)
+			return nil
+		}
+	}
 
 	return nil
 }

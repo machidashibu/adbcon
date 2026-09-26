@@ -35,3 +35,4 @@ go.work.sum
 *.log
 # temporary for debugging
 *.pem
+serials.json

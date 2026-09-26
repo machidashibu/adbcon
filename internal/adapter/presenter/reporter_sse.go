@@ -30,13 +30,11 @@ func NewSSEReporter(resp *echo.Response) *SSEReporter {
 	}
 }
 
-// ReportDeviceList reports dvice list.
-func (r SSEReporter) ReportDeviceList(devs domain.DeviceList) error {
+func (r SSEReporter) report(report any) error {
 	// marshal to JSON
-	apiData := apiconv.DeviceListToApi(devs)
-	data, err := json.Marshal(apiData)
+	data, err := json.Marshal(report)
 	if err != nil {
-		slog.Error("reporter json marshal error", "err", err, "data", apiData)
+		slog.Error("reporter json marshal error", "err", err, "report", report)
 		return err
 	}
 
@@ -52,6 +50,18 @@ func (r SSEReporter) ReportDeviceList(devs domain.DeviceList) error {
 	return nil
 }
 
+// ReportDeviceList reports dvice list.
+func (r SSEReporter) ReportDeviceList(devs domain.DeviceList) error {
+	return r.report(apiconv.DeviceListToApi(devs))
+}
+
+// ReportCommandResult reports command result.
+func (r SSEReporter) ReportCommandResult(result domain.CommandResult) error {
+	// marshal to JSON
+	return r.report(apiconv.CommandResult(result))
+}
+
+// ReportClose reports to close SSE connection.
 func (r SSEReporter) ReportClose() error {
 	// report
 	r.mu.Lock()

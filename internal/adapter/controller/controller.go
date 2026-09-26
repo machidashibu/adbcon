@@ -3,6 +3,7 @@ package controller
 import (
 	"adbcon/api"
 	"adbcon/internal/domain"
+	"fmt"
 	"time"
 )
 
@@ -25,4 +26,22 @@ func DeviceStatusToDomain(status string) domain.DeviceStatus {
 		return domain.Online // adb devices rule
 	}
 	return domain.DeviceStatus(status)
+}
+
+func CommandArgsToComain(args *api.CommandArgs) []string {
+	if args == nil {
+		return []string{}
+	}
+	return []string(*args)
+}
+
+func SerialListToDomain(list api.SerialList) (domain.SerialList, error) {
+	if len(list) == 0 {
+		return nil, fmt.Errorf("not allowed empty serial list")
+	}
+	serials := make(domain.SerialList, len(list))
+	for index, serial := range list {
+		serials[index] = string(serial)
+	}
+	return serials, nil
 }
