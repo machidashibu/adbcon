@@ -133,3 +133,91 @@ func (h *EchoHandler) ExecuteAdbShell(ctx echo.Context, params api.ExecuteAdbShe
 
 	return nil
 }
+
+// ExecuteAdbRoot Execute adb root command and report result.
+// (POST /api/adb/root)
+func (h *EchoHandler) ExecuteAdbRoot(ctx echo.Context) error {
+	// bind body
+	var body api.ExecuteAdbRootJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	slog.Debug("EchoHandler::ExecuteAdbRoot", "body", body)
+
+	// convert to domain (with validate)
+	targets, err := controller.SerialListToDomain(body)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	// parepare commands
+	exec := service.NewMultiCommand()
+	for _, serial := range targets {
+		cmd := infra.NewAdbCommandWithSerial(domain.CommandRoot, serial)
+		exec.Add(serial, cmd)
+	}
+
+	// prepare reporter
+	reporter := presenter.NewSSEReporter(ctx.Response())
+
+	// start command
+	ch := exec.Start(ctx.Request().Context())
+	for {
+		result, ok := <-ch
+		if !ok {
+			reporter.ReportClose()
+			break
+		}
+		if err := reporter.ReportCommandResult(result); err != nil {
+			slog.Error("command result report error", "err", err, "result", result)
+			return nil
+		}
+	}
+
+	return nil
+}
+
+// ExecuteAdbUnroot Execute adb unroot command and report result.
+// (POST /api/adb/unroot)
+func (h *EchoHandler) ExecuteAdbUnroot(ctx echo.Context) error {
+	// bind body
+	var body api.ExecuteAdbUnrootJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	slog.Debug("EchoHandler::ExecuteAdbUnroot", "body", body)
+
+	// convert to domain (with validate)
+	targets, err := controller.SerialListToDomain(body)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	// parepare commands
+	exec := service.NewMultiCommand()
+	for _, serial := range targets {
+		cmd := infra.NewAdbCommandWithSerial(domain.CommandUnroot, serial)
+		exec.Add(serial, cmd)
+	}
+
+	// prepare reporter
+	reporter := presenter.NewSSEReporter(ctx.Response())
+
+	// start command
+	ch := exec.Start(ctx.Request().Context())
+	for {
+		result, ok := <-ch
+		if !ok {
+			reporter.ReportClose()
+			break
+		}
+		if err := reporter.ReportCommandResult(result); err != nil {
+			slog.Error("command result report error", "err", err, "result", result)
+			return nil
+		}
+	}
+
+	return nil
+}

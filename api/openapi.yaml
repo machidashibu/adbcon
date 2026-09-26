@@ -57,11 +57,7 @@ paths:
             $ref: "#/components/schemas/CommandArgs"
           example: args=ping,-n,4,8.8.8.8
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SerialList"
-        required: true
+        $ref: "#/components/requestBodies/TargetList"
       responses:
         '200':
           $ref: "#/components/responses/SSEResponse"
@@ -77,6 +73,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"            
+  /api/adb/root:
+    post:
+      summary: Execute adb root command and report result.
+      description: CommandResults is used for data within SSE response.
+      operationId: ExecuteAdbRoot
+      requestBody:
+        $ref: "#/components/requestBodies/TargetList"
+      responses:
+        '200':
+          $ref: "#/components/responses/SSEResponse"
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"  
+  /api/adb/unroot:
+    post:
+      summary: Execute adb unroot command and report result.
+      description: CommandResults is used for data within SSE response.
+      operationId: ExecuteAdbUnroot
+      requestBody:
+        $ref: "#/components/requestBodies/TargetList"
+      responses:
+        '200':
+          $ref: "#/components/responses/SSEResponse"
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
 
 components:
   parameters:
@@ -101,6 +141,14 @@ components:
         type: integer
         minimum: 0
       example: 5
+  requestBodies:
+    TargetList:
+      description: List of command target.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SerialList"
+      required: true
   responses:
     SSEResponse:
       description: Response SSE stream

@@ -9,6 +9,8 @@ const (
 	CommandAdb     CommandName = "adb"
 	CommandDevices CommandName = "devices"
 	CommandShell   CommandName = "shell"
+	CommandRoot    CommandName = "root"
+	CommandUnroot  CommandName = "unroot"
 )
 
 // Interval is a polling interval to execute command.
