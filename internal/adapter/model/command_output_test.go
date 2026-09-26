@@ -7,7 +7,7 @@ import (
 	"github.com/go-openapi/testify/v2/require"
 )
 
-func TestCommandResult(t *testing.T) {
+func TestCommandOutput(t *testing.T) {
 	// testcase
 	type testcase struct {
 		name      string
@@ -34,7 +34,7 @@ func TestCommandResult(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := model.CommandResult(tc.in)
+			result := model.CommandOutput(tc.in)
 			require.Equal(t, tc.outEmpty, result.IsEmpty())
 			if !tc.outEmpty {
 				require.Equal(t, tc.outBytes, result.Bytes())

@@ -12,7 +12,7 @@ import (
 func TestAdbDevicesParser(t *testing.T) {
 	// slog.SetLogLoggerLevel(slog.LevelDebug) // for debug
 
-	testdata := model.CommandResult(`List of devices attached
+	testdata := model.CommandOutput(`List of devices attached
 ABC123DEF        device product:product1 model:model1 device:device1 transport_id:1
 HIJ456KLM        unauthorized transport_id:6
 OPQR789STU       offline transport_id:4

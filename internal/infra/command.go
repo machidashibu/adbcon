@@ -53,7 +53,7 @@ func NewAdbCommandWithSerial(name domain.CommandName, serial string, args ...str
 // Run execute command by sync.
 // Return all output bytes when terminated the command.
 // The output is merged stdout and stderr.
-func (c Command) Run(ctx context.Context) (domain.CommandResult, error) {
+func (c Command) Run(ctx context.Context) (domain.CommandOutput, error) {
 	// prepare
 	cmd := exec.CommandContext(ctx, c.name, c.args...)
 	cmd.Stderr = cmd.Stdout // merge stdout & stderr
@@ -65,7 +65,7 @@ func (c Command) Run(ctx context.Context) (domain.CommandResult, error) {
 		return nil, err
 	}
 
-	return model.CommandResult(output), nil
+	return model.CommandOutput(output), nil
 }
 
 // Run execute command by async.

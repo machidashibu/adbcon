@@ -7,7 +7,7 @@ import (
 )
 
 type execAdbDevicesExecuter interface {
-	Run(ctx context.Context) (domain.CommandResult, error)
+	Run(ctx context.Context) (domain.CommandOutput, error)
 }
 
 type execAdbDevicesRepository interface {
@@ -15,7 +15,7 @@ type execAdbDevicesRepository interface {
 }
 
 type execAdbDevicesParser interface {
-	Parse(result domain.CommandResult) (domain.DeviceList, error)
+	Parse(result domain.CommandOutput) (domain.DeviceList, error)
 }
 
 // ExecuteAdbDevicesUsecase is a usecase.

@@ -76,11 +76,11 @@ type stubGetDevices struct {
 	count int
 }
 
-func (s stubGetDevices) Run(ctx context.Context) (domain.CommandResult, error) {
-	return model.CommandResult{}, nil
+func (s stubGetDevices) Run(ctx context.Context) (domain.CommandOutput, error) {
+	return model.CommandOutput{}, nil
 }
 
-func (s *stubGetDevices) Parse(result domain.CommandResult) (domain.DeviceList, error) {
+func (s *stubGetDevices) Parse(result domain.CommandOutput) (domain.DeviceList, error) {
 	if s.count >= len(s.list) {
 		return s.list[s.count-1], nil
 	}

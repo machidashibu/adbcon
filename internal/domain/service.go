@@ -4,9 +4,9 @@ import (
 	"context"
 )
 
-// CommandResult is an output of command.
+// CommandOutput is an output of command.
 // It has converting method that from bytes (received raw) to string, string array (each lines).
-type CommandResult interface {
+type CommandOutput interface {
 	// Bytes provides received raw data by byte array.
 	Bytes() []byte
 	// String provides strings that is casted raw data.
@@ -23,7 +23,7 @@ type CommandCh chan []byte
 // CommandExecuter is an interface of service that execute OS command by sync or async.
 type CommandExecuter interface {
 	// Run executes OS command by sync.
-	Run(ctx context.Context) (CommandResult, error)
+	Run(ctx context.Context) (CommandOutput, error)
 	// Start executes OS command by async.
 	Start(ctx context.Context) (CommandCh, error)
 }

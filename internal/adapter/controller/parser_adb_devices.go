@@ -13,7 +13,7 @@ import (
 type AdbDeviceParser struct{}
 
 // Parse parses command result to domain data.
-func (a AdbDeviceParser) Parse(result domain.CommandResult) (domain.DeviceList, error) {
+func (a AdbDeviceParser) Parse(result domain.CommandOutput) (domain.DeviceList, error) {
 	var errorInvalidformat = fmt.Errorf("invalid format: adb devices")
 
 	// validate

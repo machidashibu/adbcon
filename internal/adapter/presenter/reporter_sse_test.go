@@ -66,7 +66,7 @@ func testReportDeviceList(t *testing.T) {
 	// expected:
 	// data: [{...},{...}]
 	//
-	resp := model.CommandResult(rec.Body.Bytes())
+	resp := model.CommandOutput(rec.Body.Bytes())
 	lines := resp.Lines()
 	require.Len(t, lines, 2)
 	require.True(t, strings.HasPrefix(lines[0], "data:"))
@@ -93,7 +93,7 @@ func testReportClose(t *testing.T) {
 		"",
 	}
 	require.NoError(t, r.ReportClose())
-	resp := model.CommandResult(rec.Body.Bytes())
+	resp := model.CommandOutput(rec.Body.Bytes())
 	lines := resp.Lines()
 	require.Len(t, lines, 3)
 	require.Equal(t, expected, lines)
@@ -129,7 +129,7 @@ func testReportDevicesListMultiThread(t *testing.T) {
 
 	wg.Wait()
 
-	resp := model.CommandResult(rec.Body.Bytes())
+	resp := model.CommandOutput(rec.Body.Bytes())
 	lines := resp.Lines()
 	if len(lines)%2 != 0 {
 		t.Fatalf("response lines must even numbers: %d", len(lines))
