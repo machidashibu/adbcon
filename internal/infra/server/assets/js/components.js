@@ -48,6 +48,44 @@ export class DevicesList {
         }
         return null;
     }
+
+    enabledDevices() {
+        console.debug('Deviceist::enabledDevices');
+
+        let list = [];
+        for(const info of this.#list) {
+            if(info.enabled()) {
+                list.push(info.serial());
+            }
+        }
+        return list;
+    }
+
+    showAllResult() {
+        console.debug("Deviceist::showAllDevideResult");
+
+        for(const info of this.#list) {
+            info.showResult();
+        }
+    }
+
+    clearAllResult() {
+        console.debug("Deviceist::clearAllResult");
+
+        this.#list.forEach((dev) => dev.clearResult());
+    }
+
+    addResult(serial, text) {
+        console.debug("Deviceist::addResult", "serial=", serial, "text=", text);
+
+        const device = this.findDevice(serial);   // find existing device
+        if(!device) {
+            console.error('unknown serial: ', serial);
+            return;
+        }
+
+        device.addResult(text);
+    }
 }
 
 export class DeviceCard {
@@ -57,12 +95,14 @@ export class DeviceCard {
 
     #serial;
     #status;
+    #result;
 
     // <li class="device-card" id="device#${this.#serial}">
     //  <input type="checbox" id="device#${this.#serial}-enabled" />
     //  <label for="device#${this.#serial}-enabled">${this.#serial}</label>
     //  <div class="device-model">${info.model}</div>
     //  <div class="device-status ${this.#status}">${this.#status}</div>
+    //  <pre>...</pre> <!-- CommandResult -->
     // </li>
     constructor(info) {
         this.#view = document.createElement('li');
@@ -93,11 +133,15 @@ export class DeviceCard {
         this.#viewStatus.classList.add('device-status');
         this.#viewStatus.classList.add(this.#status);
 
+        // create view for command result
+        this.#result = new CommandResult();
+
         // append children
         this.#view.appendChild(this.#viewEnabled);
         this.#view.appendChild(viewLabel);
         this.#view.appendChild(viewModel);
         this.#view.appendChild(this.#viewStatus);
+        this.#view.appendChild(this.#result.view());
     }
 
     view() { return this.#view; }
@@ -113,4 +157,53 @@ export class DeviceCard {
 
         return this.#status;
     }
+
+    enabled(enabled) {
+        if(enabled !== Boolean){ return this.#viewEnabled.checked; }    // return enabled only
+
+        // update enabled
+        this.#viewEnabled.checked = enabled;
+
+        return this.#viewEnabled.checked;
+    }
+
+    addResult(text) { this.#result.add(text); }
+    clearResult() { this.#result.clear(); }
+    showResult() { this.#result.show(); }
+    hideResult() { this.#result.hide(); }
+}
+
+export class CommandResult {
+    #view;
+
+    // <pre class="console device-console hide"></ul>
+    constructor() {
+        this.#view = document.createElement('pre');
+        this.#view.classList.add("console");
+        this.#view.classList.add("device-console");
+        this.#view.classList.add("hide");
+        this.clear();
+    }
+
+    view() { return this.#view; }
+    clear() { this.#view.textContent = ''; }
+    add(text) { this.#view.textContent += text + '\n'; }
+
+    show() {
+        if(this.#view.classList.contains('hide')) {
+            this.#view.classList.remove('hide');
+            this.#view.classList.add('show');
+        }
+    }
+
+    hide() {
+        if(this.#view.classList.contains('show')) {
+            this.#view.classList.remove('show');
+            this.#view.classList.add('hide');
+        }        
+    }
+
+
+
+
 }

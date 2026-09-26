@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADB Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,8 +16,15 @@
     <main>
         <div> <!-- command palette field -->
             <h2>Command Palette</h2>
-            <input type="text" id="command-arguments" placeholder="Enter command arguments" size="64">
+            <input type="text" id="command-arguments" class="console" placeholder="Enter command arguments" size="64" />
             <button id="command-post">POST</button>
+            <menu class="vertical-option-menu">
+                <li>
+                    <input type="checkbox" id="clear-result" checked />
+                    <label for="clear-result">Clears all result before post the command.</label>
+                </li>
+            </menu>
+            <div id="command-error" class="hide"></div>
         </div>
         <div> <!-- devices list field -->
             <h2>Devices List</h2>

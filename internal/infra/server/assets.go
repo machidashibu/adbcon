@@ -22,9 +22,13 @@ var jsMain []byte
 //go:embed assets/js/components.js
 var jsComponents []byte
 
+//go:embed assets/js/api.js
+var jsApi []byte
+
 var assetsTable AssetsMap = AssetsMap{
 	"/gui":           AssetInfo{Ext: ".html", Data: htmlMain},
 	"/styles.css":    AssetInfo{Ext: ".css", Data: cssStyles},
 	"/main.js":       AssetInfo{Ext: ".js", Data: jsMain},
 	"/components.js": AssetInfo{Ext: ".js", Data: jsComponents},
+	"/api.js":        AssetInfo{Ext: ".js", Data: jsApi},
 }
