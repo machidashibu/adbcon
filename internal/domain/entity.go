@@ -8,6 +8,7 @@ type CommandName string
 const (
 	CommandAdb     CommandName = "adb"
 	CommandDevices CommandName = "devices"
+	CommandShell   CommandName = "shell"
 )
 
 // Polling interval

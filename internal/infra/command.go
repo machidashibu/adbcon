@@ -25,6 +25,31 @@ func NewCommand(name string, args ...string) *Command {
 	}
 }
 
+// NewAdbCommand creates object for ADB command with sub command name and arguments.
+// `name` is a name of sub command for ADN. Supported commands are defined in domain by CommandName type.
+// `args` is a  command arguments.
+func NewAdbCommand(name domain.CommandName, args ...string) *Command {
+	obj := &Command{
+		name: string(domain.CommandAdb),
+		args: []string{string(name)},
+	}
+	obj.args = append(obj.args, args...)
+	return obj
+}
+
+// NewAdbCommandWithSerial creates object for ADB command with sub command name, serial and arguments.
+// `name` is a name of sub command for ADN. Supported commands are defined in domain by CommandName type.
+// `serial` is a serial of devie. It is a `-s` option of ADB command.
+// `args` is a  command arguments.
+func NewAdbCommandWithSerial(name domain.CommandName, serial string, args ...string) *Command {
+	obj := &Command{
+		name: string(domain.CommandAdb),
+		args: []string{"-s", serial, string(name)},
+	}
+	obj.args = append(obj.args, args...)
+	return obj
+}
+
 // Run execute command by sync.
 // Return all output bytes when terminated the command.
 // The output is merged stdout and stderr.

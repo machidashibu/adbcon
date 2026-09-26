@@ -11,7 +11,7 @@ import (
 func Factory(repo domain.DeviceStatusRepository) *EchoHandler {
 	// prepare usecases
 	ucAdbDevices := usecase.NewExecuteAdbDevicesUsecase(
-		infra.NewCommand(string(domain.CommandAdb), string(domain.CommandDevices), "-l"),
+		infra.NewAdbCommand(domain.CommandDevices, "-l"),
 		new(controller.AdbDeviceParser),
 		repo,
 	)
