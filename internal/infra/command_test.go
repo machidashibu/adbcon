@@ -1,7 +1,6 @@
 package infra_test
 
 import (
-	"adbcon/internal/domain"
 	"adbcon/internal/infra"
 	"context"
 	"testing"
@@ -21,8 +20,8 @@ func TestCommandRun(t *testing.T) {
 	testcases := []testcase{
 		{
 			name:    "success",
-			command: string(domain.CommandAdb),
-			args:    []string{string(domain.CommandDevices), "-l"},
+			command: "go",
+			args:    []string{"version"},
 		},
 		{
 			name:     "unknown command",
@@ -63,8 +62,17 @@ func TestCommandStart(t *testing.T) {
 	testcases := []testcase{
 		{
 			name:    "success",
-			command: "ping",
-			args:    []string{"-n", "2", "8.8.8.8"},
+			command: "go",
+			args: []string{"run", "-e", `
+package main
+import ("fmt"; "time")
+func main() {
+	for index := range 4 {
+		time.Sleep(500 * time.Millisecond)
+		fmt.Println("ASYNC: ", index, " th")
+	}
+}
+`},
 		},
 		{
 			name:     "unknown command",
