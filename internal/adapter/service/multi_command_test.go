@@ -11,11 +11,23 @@ import (
 	"github.com/go-openapi/testify/v2/require"
 )
 
+// This code simulates an async command.
+var testcode = `
+package main
+import ("fmt"; "time")
+func main() {
+	for index := range 4 {
+		time.Sleep(500 * time.Millisecond)
+		fmt.Println("ASYNC: ", index, " th")
+	}
+}
+`
+
 func TestMultiCommand(t *testing.T) {
 	multi := service.NewMultiCommand().
-		Add("S1", infra.NewCommand("ping", "-n", "4", "8.8.8.8")).
-		Add("S2", infra.NewCommand("ping", "-n", "4", "8.8.8.8")).
-		Add("S3", infra.NewCommand("ping", "-n", "4", "8.8.8.8"))
+		Add("S1", infra.NewCommand("go", "run", "-e", testcode)).
+		Add("S2", infra.NewCommand("go", "run", "-e", testcode)).
+		Add("S3", infra.NewCommand("go", "run", "-e", testcode))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

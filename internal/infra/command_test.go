@@ -9,6 +9,18 @@ import (
 	"github.com/go-openapi/testify/v2/require"
 )
 
+// This code simulates an async command.
+var testcode = `
+package main
+import ("fmt"; "time")
+func main() {
+	for index := range 4 {
+		time.Sleep(500 * time.Millisecond)
+		fmt.Println("ASYNC: ", index, " th")
+	}
+}
+`
+
 func TestCommandRun(t *testing.T) {
 	// testcase
 	type testcase struct {
@@ -63,16 +75,7 @@ func TestCommandStart(t *testing.T) {
 		{
 			name:    "success",
 			command: "go",
-			args: []string{"run", "-e", `
-package main
-import ("fmt"; "time")
-func main() {
-	for index := range 4 {
-		time.Sleep(500 * time.Millisecond)
-		fmt.Println("ASYNC: ", index, " th")
-	}
-}
-`},
+			args:    []string{"run", "-e", testcode},
 		},
 		{
 			name:     "unknown command",
