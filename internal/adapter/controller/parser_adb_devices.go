@@ -40,7 +40,6 @@ func (a AdbDeviceParser) Parse(result domain.CommandOutput) (domain.DeviceList, 
 		// split by spece
 		fields := strings.Fields(text)
 		if len(fields) < 2 {
-			slog.Warn("invalid format", "text", text)
 			continue // skip when unmatched line
 		}
 
