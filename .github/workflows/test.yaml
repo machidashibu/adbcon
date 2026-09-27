@@ -61,7 +61,7 @@ jobs:
             "https://api.github.com/gists/75da47576ae3375365776b165bc29d48" \
             -d "{\"files\":{\"coverage.json\":{\"content\":\"{\\\"schemaVersion\\\":1,\\\"label\\\":\\\"coverage\\\",\\\"message\\\":\\\"${COVERAGE}\\\",\\\"color\\\":\\\"${COLOR}\\\"}\"}}}"
           
-          ls -la coverage.svg
+          echo "API Response: $RESPONSE"
 
       - name: Commit & Push Badge
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
@@ -69,3 +69,4 @@ jobs:
         with:
           commit_message: "chore: update coverage badge [skip ci]"
           file_pattern: 'coverage.svg'
+      
