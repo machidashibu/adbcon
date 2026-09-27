@@ -38,6 +38,6 @@ Memo for development.
 | unroot | o | |
 | usb | x | |
 | tcpip | x | |
-| start-server | x | |
-| kill-server | x | |
+| start-server | o | |
+| kill-server | o | |
 | reconnect | x | |

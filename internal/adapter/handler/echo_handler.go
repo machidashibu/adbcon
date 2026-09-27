@@ -266,3 +266,91 @@ func (h *EchoHandler) ExecuteAdbUnroot(ctx echo.Context) error {
 
 	return nil
 }
+
+// ExecuteAdbStartServer Execute adb start-server command and report result.
+// (POST /api/adb/start-server)
+func (h *EchoHandler) ExecuteAdbStartServer(ctx echo.Context) error {
+	// bind body
+	var body api.ExecuteAdbStartServerJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	slog.Debug("EchoHandler::ExecuteAdbStartServer", "body", body)
+
+	// convert to domain (with validate)
+	targets, err := controller.SerialListToDomain(body)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	// parepare commands
+	exec := service.NewMultiCommand()
+	for _, serial := range targets {
+		cmd := infra.NewAdbCommandWithSerial(domain.CommandStartServer, serial)
+		exec.Add(serial, cmd)
+	}
+
+	// prepare reporter
+	reporter := presenter.NewSSEReporter(ctx.Response())
+
+	// start command
+	ch := exec.Start(ctx.Request().Context())
+	for {
+		result, ok := <-ch
+		if !ok {
+			reporter.ReportClose()
+			break
+		}
+		if err := reporter.ReportCommandResult(result); err != nil {
+			slog.Error("command result report error", "err", err, "result", result)
+			return nil
+		}
+	}
+
+	return nil
+}
+
+// ExecuteAdbKillServer Execute adb kill-server command and report result.
+// (POST /api/adb/kill-server)
+func (h *EchoHandler) ExecuteAdbKillServer(ctx echo.Context) error {
+	// bind body
+	var body api.ExecuteAdbKillServerJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	slog.Debug("EchoHandler::ExecuteAdbUnroot", "body", body)
+
+	// convert to domain (with validate)
+	targets, err := controller.SerialListToDomain(body)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	// parepare commands
+	exec := service.NewMultiCommand()
+	for _, serial := range targets {
+		cmd := infra.NewAdbCommandWithSerial(domain.CommandKillServer, serial)
+		exec.Add(serial, cmd)
+	}
+
+	// prepare reporter
+	reporter := presenter.NewSSEReporter(ctx.Response())
+
+	// start command
+	ch := exec.Start(ctx.Request().Context())
+	for {
+		result, ok := <-ch
+		if !ok {
+			reporter.ReportClose()
+			break
+		}
+		if err := reporter.ReportCommandResult(result); err != nil {
+			slog.Error("command result report error", "err", err, "result", result)
+			return nil
+		}
+	}
+
+	return nil
+}

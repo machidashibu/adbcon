@@ -149,6 +149,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+  /api/adb/start-server:
+    post:
+      summary: Execute adb start-server command and report result.
+      description: CommandResults is used for data within SSE response.
+      operationId: ExecuteAdbStartServer
+      requestBody:
+        $ref: "#/components/requestBodies/TargetList"
+      responses:
+        '200':
+          $ref: "#/components/responses/SSEResponse"
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /api/adb/kill-server:
+    post:
+      summary: Execute adb kill-server command and report result.
+      description: CommandResults is used for data within SSE response.
+      operationId: ExecuteAdbKillServer
+      requestBody:
+        $ref: "#/components/requestBodies/TargetList"
+      responses:
+        '200':
+          $ref: "#/components/responses/SSEResponse"
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
 
 components:
   parameters:

@@ -6,12 +6,14 @@ import "time"
 type CommandName string
 
 const (
-	CommandAdb     CommandName = "adb"
-	CommandDevices CommandName = "devices"
-	CommandShell   CommandName = "shell"
-	CommandReboot  CommandName = "reboot"
-	CommandRoot    CommandName = "root"
-	CommandUnroot  CommandName = "unroot"
+	CommandAdb         CommandName = "adb"
+	CommandDevices     CommandName = "devices"
+	CommandShell       CommandName = "shell"
+	CommandReboot      CommandName = "reboot"
+	CommandRoot        CommandName = "root"
+	CommandUnroot      CommandName = "unroot"
+	CommandStartServer CommandName = "start-server"
+	CommandKillServer  CommandName = "kill-server"
 )
 
 // Interval is a polling interval to execute command.
