@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/machidashibu/adbcon/actions/workflows/build.yaml/badge.svg)](https://github.com/machidashibu/adbcon/actions/workflows/build.yaml)
 [![Test](https://github.com/machidashibu/adbcon/actions/workflows/test.yaml/badge.svg)](https://github.com/machidashibu/adbcon/actions/workflows/test.yaml)
-![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/machidashibu/75da47576ae3375365776b165bc29d48/raw/coverage.json)
+![Coverage](./coverage.svg)
 
 This tool provides GUI for ADB command on WEB browser.
 ***adbcon*** is an acronym of ***ADB Console***.
