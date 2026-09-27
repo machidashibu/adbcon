@@ -38,15 +38,12 @@ jobs:
       - name: Generate Coverage Badge
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
         run: |
-          # coverage.out からトータルのパーセンテージ（例: 29.6%）を取得
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}')
           echo "Calculated Coverage: $COVERAGE"
           
-          # 数値を取り出してパーセンテージに応じて色を決定
           NUM=$(echo $COVERAGE | tr -d '%')
           COLOR="orange"
           
-          # bashの数値比較 (整数変換)
           INT_NUM=${NUM%.*}
           if [ -n "$INT_NUM" ]; then
             if [ "$INT_NUM" -ge 80 ]; then
@@ -58,7 +55,6 @@ jobs:
             fi
           fi
 
-          # Shields.io 形式の SVG を作成して coverage.svg に保存
           curl -s "https://img.shields.io/badge/coverage-${COVERAGE}-${COLOR}.svg" > coverage.svg
 
       - name: Commit & Push Badge
