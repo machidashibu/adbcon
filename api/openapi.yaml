@@ -41,6 +41,70 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+  /api/adb/push:
+    post:
+      summary: Execute adb push command that push file(s) and report result.
+      description: CommandResults is used for data within SSE response.
+      operationId: ExecuteAdbPush
+      parameters:
+        - name: args
+          description: Command arguments.
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/CommandArgs"
+          example: args=dosc%2Fsample.png%2C%2Fsdcard%2Fpicture%2F
+      requestBody:
+        $ref: "#/components/requestBodies/TargetList"
+      responses:
+        '200':
+          $ref: "#/components/responses/SSEResponse"
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails" 
+  /api/adb/pull:
+    post:
+      summary: Execute adb pull command that pull file(s) and report result.
+      description: CommandResults is used for data within SSE response.
+      operationId: ExecuteAdbPull
+      parameters:
+        - name: args
+          description: Command arguments.
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/CommandArgs"
+          example: args=%2Fsdcard%2Fpicture%sample.png
+      requestBody:
+        $ref: "#/components/requestBodies/TargetList"
+      responses:
+        '200':
+          $ref: "#/components/responses/SSEResponse"
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"    
   /api/adb/shell:
     post:
       summary: Execute adb shell command and report result.
@@ -55,7 +119,7 @@ paths:
           explode: false
           schema:
             $ref: "#/components/schemas/CommandArgs"
-          example: args=ping,-n,4,8.8.8.8
+          example: args=ping%2C-n%2C4%2C8.8.8.8
       requestBody:
         $ref: "#/components/requestBodies/TargetList"
       responses:

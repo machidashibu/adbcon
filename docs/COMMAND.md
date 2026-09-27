@@ -12,8 +12,8 @@ Memo for development.
 | forward | x | |
 | ppp | x | |
 | reverse | x | |
-| push | x | |
-| pull | x | |
+| push | o | |
+| pull | o | |
 | sync | x | |
 | shell | o | |
 | emu | x | |

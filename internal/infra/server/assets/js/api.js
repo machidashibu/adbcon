@@ -4,7 +4,7 @@ export async function PostAdbCommand(cmd, targets, args, success, fail) {
     // name URL
     var url = "/api/" + cmd;
     if(args && args.length != 0) {
-        url += "?args=" + encodeURI(args.join(','));
+        url += "?args=" + encodeURIComponent(args.join(','));
     } 
 
     try {

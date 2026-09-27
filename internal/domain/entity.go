@@ -8,6 +8,8 @@ type CommandName string
 const (
 	CommandAdb         CommandName = "adb"
 	CommandDevices     CommandName = "devices"
+	CommandPush        CommandName = "push"
+	CommandPull        CommandName = "pull"
 	CommandShell       CommandName = "shell"
 	CommandReboot      CommandName = "reboot"
 	CommandRoot        CommandName = "root"

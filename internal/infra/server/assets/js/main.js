@@ -50,6 +50,9 @@ window.onload = () => {
     document.getElementById('command-post').addEventListener('click', (e) => {
         console.log("command post");
 
+        // prevent to reload page
+        e.preventDefault();
+
         // clear and hide command error view
         command.clear();
 

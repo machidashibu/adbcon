@@ -54,6 +54,10 @@ div#command-error {
     color: red;
 }
 
+input#fix-result-height {
+    text-align: right;
+}
+
 ul.devices-list {
     list-style-type: none;
     padding-inline-start: 0px;

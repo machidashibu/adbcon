@@ -36,3 +36,4 @@ go.work.sum
 # temporary for debugging
 *.pem
 serials.json
+/*.png

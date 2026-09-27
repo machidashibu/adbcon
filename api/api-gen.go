@@ -160,6 +160,18 @@ type PollingInterval = int
 // TargetList List of device serial.
 type TargetList = SerialList
 
+// ExecuteAdbPullParams defines parameters for ExecuteAdbPull.
+type ExecuteAdbPullParams struct {
+	// Args Command arguments.
+	Args CommandArgs `form:"args" json:"args"`
+}
+
+// ExecuteAdbPushParams defines parameters for ExecuteAdbPush.
+type ExecuteAdbPushParams struct {
+	// Args Command arguments.
+	Args CommandArgs `form:"args" json:"args"`
+}
+
 // ExecuteAdbRebootParams defines parameters for ExecuteAdbReboot.
 type ExecuteAdbRebootParams struct {
 	// Args Command arguments.
@@ -181,6 +193,12 @@ type GetDevicesParams struct {
 // ExecuteAdbKillServerJSONRequestBody defines body for ExecuteAdbKillServer for application/json ContentType.
 type ExecuteAdbKillServerJSONRequestBody = SerialList
 
+// ExecuteAdbPullJSONRequestBody defines body for ExecuteAdbPull for application/json ContentType.
+type ExecuteAdbPullJSONRequestBody = SerialList
+
+// ExecuteAdbPushJSONRequestBody defines body for ExecuteAdbPush for application/json ContentType.
+type ExecuteAdbPushJSONRequestBody = SerialList
+
 // ExecuteAdbRebootJSONRequestBody defines body for ExecuteAdbReboot for application/json ContentType.
 type ExecuteAdbRebootJSONRequestBody = SerialList
 
@@ -201,6 +219,12 @@ type ServerInterface interface {
 	// ExecuteAdbKillServer Execute adb kill-server command and report result.
 	// (POST /api/adb/kill-server)
 	ExecuteAdbKillServer(ctx echo.Context) error
+	// ExecuteAdbPull Execute adb pull command that pull file(s) and report result.
+	// (POST /api/adb/pull)
+	ExecuteAdbPull(ctx echo.Context, params ExecuteAdbPullParams) error
+	// ExecuteAdbPush Execute adb push command that push file(s) and report result.
+	// (POST /api/adb/push)
+	ExecuteAdbPush(ctx echo.Context, params ExecuteAdbPushParams) error
 	// ExecuteAdbReboot Execute adb reroot command and report result.
 	// (POST /api/adb/reboot)
 	ExecuteAdbReboot(ctx echo.Context, params ExecuteAdbRebootParams) error
@@ -235,6 +259,42 @@ func (w *ServerInterfaceWrapper) ExecuteAdbKillServer(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.ExecuteAdbKillServer(ctx)
+	return err
+}
+
+// ExecuteAdbPull converts echo context to params.
+func (w *ServerInterfaceWrapper) ExecuteAdbPull(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ExecuteAdbPullParams
+	// ------------- Required query parameter "args" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, true, "args", ctx.QueryParams(), &params.Args, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter args: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ExecuteAdbPull(ctx, params)
+	return err
+}
+
+// ExecuteAdbPush converts echo context to params.
+func (w *ServerInterfaceWrapper) ExecuteAdbPush(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ExecuteAdbPushParams
+	// ------------- Required query parameter "args" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, true, "args", ctx.QueryParams(), &params.Args, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter args: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ExecuteAdbPush(ctx, params)
 	return err
 }
 
@@ -377,6 +437,8 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 
 	router.GET(options.BaseURL+"/gui", wrapper.GetMainPage, options.OperationMiddlewares["GetMainPage"]...)
 	router.GET(options.BaseURL+"/api/devices", wrapper.GetDevices, options.OperationMiddlewares["GetDevices"]...)
+	router.POST(options.BaseURL+"/api/adb/push", wrapper.ExecuteAdbPush, options.OperationMiddlewares["ExecuteAdbPush"]...)
+	router.POST(options.BaseURL+"/api/adb/pull", wrapper.ExecuteAdbPull, options.OperationMiddlewares["ExecuteAdbPull"]...)
 	router.POST(options.BaseURL+"/api/adb/shell", wrapper.ExecuteAdbShell, options.OperationMiddlewares["ExecuteAdbShell"]...)
 	router.POST(options.BaseURL+"/api/adb/reboot", wrapper.ExecuteAdbReboot, options.OperationMiddlewares["ExecuteAdbReboot"]...)
 	router.POST(options.BaseURL+"/api/adb/root", wrapper.ExecuteAdbRoot, options.OperationMiddlewares["ExecuteAdbRoot"]...)
@@ -391,33 +453,35 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
+	"iphIlbG9s85Zhz5+fvwjAAD//w==",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,
