@@ -55,10 +55,12 @@ jobs:
             fi
           fi
 
-          # ENCODED_COVERAGE=$(echo $COVERAGE | sed 's/%/%25/')
-          # curl -s "https://img.shields.io/badge/coverage-${COVERAGE}-${COLOR}.svg" > coverage.svg
-          curl -sSL "https://img.shields.io/static/v1?label=coverage&message=${COVERAGE}&color=${COLOR}" -o coverage.svg
-
+          curl -X PATCH \
+            -H "Authorization: token ${GIST_SECRET}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/gists/${GIST_ID}" \
+            -d "{\"files\":{\"coverage.json\":{\"content\":\"{\\\"schemaVersion\\\":1,\\\"label\\\":\\\"coverage\\\",\\\"message\\\":\\\"${COVERAGE}\\\",\\\"color\\\":\\\"${COLOR}\\\"}\"}}}"
+          
           ls -la coverage.svg
 
       - name: Commit & Push Badge
