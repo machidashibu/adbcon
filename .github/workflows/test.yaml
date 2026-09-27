@@ -58,7 +58,7 @@ jobs:
           curl -X PATCH \
             -H "Authorization: token ${GIST_SECRET}" \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/gists/${GIST_ID}" \
+            "https://api.github.com/gists/75da47576ae3375365776b165bc29d48" \
             -d "{\"files\":{\"coverage.json\":{\"content\":\"{\\\"schemaVersion\\\":1,\\\"label\\\":\\\"coverage\\\",\\\"message\\\":\\\"${COVERAGE}\\\",\\\"color\\\":\\\"${COLOR}\\\"}\"}}}"
           
           ls -la coverage.svg
