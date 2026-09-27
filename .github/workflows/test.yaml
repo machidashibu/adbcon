@@ -1,0 +1,49 @@
+name: Build, Test, and Coverage Badge
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # バッジの更新を書き込むために必要
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26' # プロジェクトのGoバージョンに併せて変更してください
+          cache: true
+
+      # 1. 依存関係のダウンロードとビルドの確認
+      - name: Install dependencies & Build
+        run: |
+          go mod download
+          go build -v ./...
+
+      # 2. テストの実行とカバー率ファイルの生成
+      - name: Run tests with coverage
+        run: go test -v -coverprofile=coverage.out ./...
+
+      # 3. Go用カバー率バッジの生成 (tj-actions/coverage-badge-go)
+      - name: Generate Coverage Badge
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: tj-actions/coverage-badge-go@v2
+        with:
+          filename: coverage.out
+
+      # 4. 生成された coverage.svg をリポジトリにコミット＆プッシュ
+      - name: Commit & Push Badge
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update coverage badge [skip ci]"
+          file_pattern: 'coverage.svg'
