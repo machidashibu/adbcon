@@ -37,3 +37,6 @@ go.work.sum
 *.pem
 serials.json
 /*.png
+
+# for badge
+!coverage.svg
