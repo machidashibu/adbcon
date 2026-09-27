@@ -37,6 +37,8 @@ jobs:
 
       - name: Generate Coverage Badge
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
         run: |
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}')
           echo "Calculated Coverage: $COVERAGE"
