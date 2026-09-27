@@ -1,76 +1,90 @@
-export async function PostAdbCommand(cmd, targets, args, success, fail) {
+export function PostAdbCommand(cmd, targets, args, success, fail) {
     console.debug("post adb command", "cmd=", cmd, "targets=", targets, "args=", args);
 
-    // name URL
-    var url = "/api/" + cmd;
-    if(args && args.length != 0) {
-        url += "?args=" + encodeURIComponent(args.join(','));
-    } 
+    const controller = new AbortController();
+    let cancelled = false;
 
-    try {
-        // fetch
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'text/event-stream'
-            },
-            body: JSON.stringify(targets)
-        });
+    const cancel = () => {
+        cancelled = true;
+        controller.abort();
+    };
 
-        if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status}`);
-        }
+    const run = async () => {
+        // name URL
+        var url = "/api/" + cmd;
+        if(args && args.length != 0) {
+            url += "?args=" + encodeURIComponent(args.join(','));
+        } 
 
-        // prepare from stream by UTF-8
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let buffer = '';
+        try {
+            // fetch
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'text/event-stream'
+                },
+                body: JSON.stringify(targets),
+                signal: controller.signal
+            });
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+            if (!response.ok) {
+                throw new Error(`HTTP Error: ${response.status}`);
+            }
 
-            // add received chunk to buffer after convert text
-            buffer += decoder.decode(value, { stream: true });
-            // split SSE message
-            const blocks = buffer.split('\n\n');
-            // add last un-completed data to buffer
-            buffer = blocks.pop();
+            // prepare from stream by UTF-8
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let buffer = '';
 
-            for (const block of blocks) {
-                if (!block.trim()) continue;
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done || cancelled) break;
 
-                // split each line
-                const lines = block.split('\n');
+                // add received chunk to buffer after convert text
+                buffer += decoder.decode(value, { stream: true });
+                // split SSE message
+                const blocks = buffer.split('\n\n');
+                // add last un-completed data to buffer
+                buffer = blocks.pop();
 
-                // parse event line
-                const eventLine = lines.find(l => l.startsWith('event: '));
-                const eventType = eventLine ? eventLine.replace(/^event:\s*/, '').trim() : 'message';
+                for (const block of blocks) {
+                    if (!block.trim() || cancelled) continue;
 
-                if (eventType === 'close') {
-                    console.log('close connection');
-                    if(success) { success(null, true); }
-                    return; // terminate command execution
-                }
+                    // parse SSE message
+                    const lines = block.split('\n');
+                    const eventLine = lines.find(l => l.startsWith('event: '));
+                    const eventType = eventLine ? eventLine.replace(/^event:\s*/, '').trim() : 'message';
 
-                // take data line
-                const dataLine= lines.find(l => l.startsWith('data: '));
-                if (dataLine) {
-                    const rawData = dataLine.replace(/^data:\s*/, '');
-                    console.log('received SSE message', "data=", rawData);
-                    try {
-                        const parsedData = JSON.parse(rawData);
-                        
-                        if(success) { success(parsedData); }
-                    } catch (e) {
-                        throw new Error(`json parse error: ${e}`);
+                    if (eventType === 'close') {
+                        console.log('close connection');
+                        if (!cancelled && success) success(null, true); // call callback if mot camcelled
+                        return; // terminate command execution
+                    }
+
+                    // take data line
+                    const dataLine= lines.find(l => l.startsWith('data: '));
+                    if (dataLine) {
+                        const rawData = dataLine.replace(/^data:\s*/, '');
+                        console.log('received SSE message', "data=", rawData);
+                        try {
+                            const parsedData = JSON.parse(rawData);
+                            
+                            if(success) { success(parsedData); }
+                        } catch (e) {
+                            throw new Error(`json parse error: ${e}`);
+                        }
                     }
                 }
             }
+        } catch (error) {
+            if (cancelled || error.name === 'AbortError') return;   // not call callback if cancelled
+
+            console.error(error);
+            if(fail){ fail(error); }
         }
-    } catch (error) {
-        console.error(error);
-        if(fail){ fail(error); }
-    }
+    };
+
+    run();
+    return cancel;
 }

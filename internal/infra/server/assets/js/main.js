@@ -8,6 +8,7 @@ const pollingInterval = 5;
 const devices = new DevicesList(document.getElementById('devices-list-contaier'));
 const command = new CommandPalette(document.getElementById('command-palette'));
 var pollingStatus = null;
+let cancelPostAdbCommand = null;
 
 // entry point
 window.onload = () => {
@@ -73,9 +74,10 @@ window.onload = () => {
         // fetch to server
         command.running();
         devices.addResult(command.text(), ...targets);
-        PostAdbCommand(command.name(), targets, command.args(), 
+        cancelPostAdbCommand = PostAdbCommand(command.name(), targets, command.args(), 
             (data, disconnected) => {
                 if(disconnected) {
+                    cancelPostAdbCommand = null;
                     command.completed();
                 } else {
                     console.log('update command result: ', data);
@@ -83,10 +85,25 @@ window.onload = () => {
                 }
             },
             (message) => {
+                cancelPostAdbCommand = null;
                 console.error('command error: ', message);
                 command.error('ERROR: ' + message);
                 command.completed();
             }
-        )
+        );
+    });
+
+    // add command cancel event
+    document.getElementById('command-cancel').addEventListener('click', (e) => {
+        console.log("command cancel");
+
+        // prevent to reload page
+        e.preventDefault();
+
+        if(cancelPostAdbCommand) {
+            cancelPostAdbCommand();
+            cancelPostAdbCommand = null;
+            command.completed();
+        }
     });
 }

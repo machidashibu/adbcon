@@ -24,7 +24,7 @@ button:active {
 }
 
 button:disabled {
-  opacity: 0.8;
+  opacity: 0.9;
   cursor: not-allowed;
 }
 

@@ -216,6 +216,7 @@ export class CommandPalette {
     #viewName;
     #viewArgs;
     #viewPost;
+    #viewCancel;
     #viewProgress;
     #viewError;
     #viewClearResult;
@@ -228,6 +229,7 @@ export class CommandPalette {
         this.#viewName = document.getElementById('command-name');
         this.#viewArgs = document.getElementById('command-arguments');
         this.#viewPost = document.getElementById('command-post');
+        this.#viewCancel = document.getElementById('command-cancel');
         this.#viewProgress = document.getElementById('command-progress');
         this.#viewError = document.getElementById('command-error');
         this.#viewClearResult = document.getElementById('clear-result');
@@ -288,16 +290,15 @@ export class CommandPalette {
 
     running() {
         this.#viewProgress.classList.remove('hide');
-        this.lock();
+        this.#viewPost.disabled = true;
+        this.#viewCancel.disabled = false;
     }
 
     completed() {
         this.#viewProgress.classList.add('hide');
-        this.unlock();
+        this.#viewPost.disabled = false;
+        this.#viewCancel.disabled = true;
     }
-
-    lock() { this.#viewPost.disabled = true; }
-    unlock() { this.#viewPost.disabled = false; }
 
     isClearResult() { return this.#viewClearResult.checked; }
 }
