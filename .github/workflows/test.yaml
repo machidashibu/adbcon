@@ -1,4 +1,4 @@
-name: Build, Test, and Coverage Badge
+name: Test
 
 on:
   push:
@@ -7,11 +7,11 @@ on:
     branches: [ "main", "dev" ]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write # バッジの更新を書き込むために必要
+      contents: write # カバレッジバッジのコミットに必要
 
     steps:
       - name: Checkout code
@@ -20,9 +20,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26' # プロジェクトのGoバージョンに併せて変更してください
+          go-version: '1.26'
           cache: true
-      # 0. ビルドに必要な証明書（cert.pem / key.pem）を自動生成
+
       - name: Generate Self-Signed Certificates
         run: |
           openssl req -x509 -newkey rsa:2048 -nodes \
@@ -32,26 +32,17 @@ jobs:
             -subj "/CN=localhost" \
             -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 
-      # 1. 依存関係のダウンロードとビルドの確認
-      - name: Install dependencies & Build
-        run: |
-          go mod download
-          go build -v ./...
-
-      # 2. テストの実行とカバー率ファイルの生成
       - name: Run tests with coverage
         run: go test -v -coverprofile=coverage.out ./...
 
-      # 3. Go用カバー率バッジの生成 (tj-actions/coverage-badge-go)
       - name: Generate Coverage Badge
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
         uses: tj-actions/coverage-badge-go@v2
         with:
           filename: coverage.out
 
-      # 4. 生成された coverage.svg をリポジトリにコミット＆プッシュ
       - name: Commit & Push Badge
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update coverage badge [skip ci]"

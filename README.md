@@ -1,11 +1,8 @@
 # ADB Console Tool
 
-<!-- ビルドステータスバッジ -->
-[![Build Status](https://github.com/machidashibu/adbcon/actions/workflows/test.yml/badge.svg)](https://github.com/machidashibu/adbcon/actions)
-
-<!-- テストカバー率バッジ -->
-Main: ![Coverage](https://raw.githubusercontent.com/machidashibu/adbcon/main/coverage.svg)
-Dev: ![Coverage](https://raw.githubusercontent.com/machidashibu/adbcon/dev/coverage.svg)
+[![Build Status](https://github.com/machidashibu/adbcon/actions/workflows/build.yml/badge.svg?branch=dev)](https://github.com/machidashibu/adbcon/actions/workflows/build.yml)
+[![Test Status](https://github.com/machidashibu/adbcon/actions/workflows/test.yml/badge.svg?branch=dev)](https://github.com/machidashibu/adbcon/actions/workflows/test.yml)
+![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/machidashibu/75da47576ae3375365776b165bc29d48/raw/coverage.json)
 
 This tool provides GUI for ADB command on WEB browser.
 ***adbcon*** is an acronym of ***ADB Console***.
