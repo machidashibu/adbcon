@@ -55,7 +55,10 @@ jobs:
             fi
           fi
 
+          ENCODED_COVERAGE=$(echo $COVERAGE | sed 's/%/%25/')
           curl -s "https://img.shields.io/badge/coverage-${COVERAGE}-${COLOR}.svg" > coverage.svg
+
+          ls -la coverage.svg
 
       - name: Commit & Push Badge
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
