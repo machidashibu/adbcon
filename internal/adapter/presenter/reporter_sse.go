@@ -1,7 +1,7 @@
 package presenter
 
 import (
-	"adbcon/internal/adapter/presenter/apiconv"
+	"adbcon/internal/adapter/presenter/toapi"
 	"adbcon/internal/domain"
 	"encoding/json"
 	"fmt"
@@ -67,13 +67,13 @@ func (r SSEReporter) report(report any) error {
 
 // ReportDeviceList reports dvice list.
 func (r SSEReporter) ReportDeviceList(devs domain.DeviceList) error {
-	return r.report(apiconv.DeviceListToApi(devs))
+	return r.report(toapi.DeviceList(devs))
 }
 
 // ReportCommandResult reports command result.
 func (r SSEReporter) ReportCommandResult(result domain.CommandResult) error {
 	// marshal to JSON
-	return r.report(apiconv.CommandResult(result))
+	return r.report(toapi.CommandResult(result))
 }
 
 // ReportClose reports to close SSE connection.

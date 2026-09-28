@@ -4,7 +4,7 @@ import (
 	"adbcon/api"
 	"adbcon/internal/adapter/controller/todomain"
 	"adbcon/internal/adapter/presenter"
-	"adbcon/internal/adapter/presenter/apiconv"
+	"adbcon/internal/adapter/presenter/toapi"
 	"adbcon/internal/adapter/service"
 	"adbcon/internal/domain"
 	"adbcon/internal/infra"
@@ -53,13 +53,11 @@ func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) 
 	if err != nil {
 		slog.Error("adb devices usecase error", "err", err)
 		return nil // disconnect from server
-		// return ctx.JSON(http.StatusInternalServerError, apiconv.MakeInternalServerError(err))
 	}
 	// report to client
 	if err := reporter.ReportDeviceList(updated); err != nil {
 		slog.Error("device list report error", "err", err, "updated", updated)
 		return nil // disconnect from server
-		// return ctx.JSON(http.StatusInternalServerError, apiconv.MakeInternalServerError(err))
 	}
 
 	// proceeds polling if interval is specified in query
@@ -77,13 +75,11 @@ func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) 
 				if err != nil {
 					slog.Error("adb devices usecase error", "err", err)
 					return nil // disconnect from server
-					// return ctx.JSON(http.StatusInternalServerError, apiconv.MakeInternalServerError(err))
 				}
 				// report to client
 				if err := reporter.ReportDeviceList(updated); err != nil {
 					slog.Error("device list report error", "err", err, "updated", updated)
 					return nil // disconnect from server
-					// return ctx.JSON(http.StatusInternalServerError, apiconv.MakeInternalServerError(err))
 				}
 			}
 		}
@@ -98,7 +94,7 @@ func (h *EchoHandler) ExecuteAdbPush(ctx echo.Context, params api.ExecuteAdbPush
 	// bind body
 	var body api.ExecuteAdbPullJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbPush", "params", params, "body", body)
@@ -107,7 +103,7 @@ func (h *EchoHandler) ExecuteAdbPush(ctx echo.Context, params api.ExecuteAdbPush
 	args := todomain.CommandArgs(&params.Args)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	// parepare commands
@@ -143,7 +139,7 @@ func (h *EchoHandler) ExecuteAdbPull(ctx echo.Context, params api.ExecuteAdbPull
 	// bind body
 	var body api.ExecuteAdbPullJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbPull", "params", params, "body", body)
@@ -152,7 +148,7 @@ func (h *EchoHandler) ExecuteAdbPull(ctx echo.Context, params api.ExecuteAdbPull
 	args := todomain.CommandArgs(&params.Args)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	// parepare commands
@@ -188,7 +184,7 @@ func (h *EchoHandler) ExecuteAdbShell(ctx echo.Context, params api.ExecuteAdbShe
 	// bind body
 	var body api.ExecuteAdbShellJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbShell", "params", params, "body", body)
@@ -197,7 +193,7 @@ func (h *EchoHandler) ExecuteAdbShell(ctx echo.Context, params api.ExecuteAdbShe
 	args := todomain.CommandArgs(&params.Args)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	// parepare commands
@@ -233,7 +229,7 @@ func (h *EchoHandler) ExecuteAdbLogcat(ctx echo.Context, params api.ExecuteAdbLo
 	// bind body
 	var body api.ExecuteAdbLogcatJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbLogcat", "params", params, "body", body)
@@ -242,7 +238,7 @@ func (h *EchoHandler) ExecuteAdbLogcat(ctx echo.Context, params api.ExecuteAdbLo
 	args := todomain.CommandArgs(params.Args)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	// parepare commands
@@ -278,7 +274,7 @@ func (h *EchoHandler) ExecuteAdbReboot(ctx echo.Context, params api.ExecuteAdbRe
 	// bind body
 	var body api.ExecuteAdbRootJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbReboot", "body", body)
@@ -287,7 +283,7 @@ func (h *EchoHandler) ExecuteAdbReboot(ctx echo.Context, params api.ExecuteAdbRe
 	args := todomain.RebootArgs(params.Args)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	// parepare commands
@@ -323,7 +319,7 @@ func (h *EchoHandler) ExecuteAdbRoot(ctx echo.Context) error {
 	// bind body
 	var body api.ExecuteAdbRootJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbRoot", "body", body)
@@ -331,7 +327,7 @@ func (h *EchoHandler) ExecuteAdbRoot(ctx echo.Context) error {
 	// convert to domain (with validate)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	// parepare commands
@@ -367,7 +363,7 @@ func (h *EchoHandler) ExecuteAdbUnroot(ctx echo.Context) error {
 	// bind body
 	var body api.ExecuteAdbUnrootJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbUnroot", "body", body)
@@ -375,7 +371,7 @@ func (h *EchoHandler) ExecuteAdbUnroot(ctx echo.Context) error {
 	// convert to domain (with validate)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	// parepare commands
@@ -411,7 +407,7 @@ func (h *EchoHandler) ExecuteAdbStartServer(ctx echo.Context) error {
 	// bind body
 	var body api.ExecuteAdbStartServerJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbStartServer", "body", body)
@@ -419,7 +415,7 @@ func (h *EchoHandler) ExecuteAdbStartServer(ctx echo.Context) error {
 	// convert to domain (with validate)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	// parepare commands
@@ -455,7 +451,7 @@ func (h *EchoHandler) ExecuteAdbKillServer(ctx echo.Context) error {
 	// bind body
 	var body api.ExecuteAdbKillServerJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	slog.Debug("EchoHandler::ExecuteAdbUnroot", "body", body)
@@ -463,7 +459,7 @@ func (h *EchoHandler) ExecuteAdbKillServer(ctx echo.Context) error {
 	// convert to domain (with validate)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
 	}
 
 	// parepare commands
