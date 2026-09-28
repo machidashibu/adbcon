@@ -11,6 +11,7 @@ const (
 	CommandPush        CommandName = "push"
 	CommandPull        CommandName = "pull"
 	CommandShell       CommandName = "shell"
+	CommandLogcat      CommandName = "logcat"
 	CommandReboot      CommandName = "reboot"
 	CommandRoot        CommandName = "root"
 	CommandUnroot      CommandName = "unroot"

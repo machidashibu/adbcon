@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -15,18 +16,26 @@ import (
 type SSEReporter struct {
 	mu   *sync.Mutex
 	resp *echo.Response
+
+	buffer   []string
+	latest   time.Time
+	interval time.Duration
+	stay     int
 }
 
 // NewSSEReporter creates object.
-func NewSSEReporter(resp *echo.Response) *SSEReporter {
+func NewSSEReporter(resp *echo.Response, interval time.Duration, stay int) *SSEReporter {
 	resp.Header().Set(echo.HeaderContentType, "text/event-stream")
 	resp.Header().Set(echo.HeaderCacheControl, "no-cache")
 	resp.Header().Set(echo.HeaderConnection, "keep-alive")
 	resp.Header().Set("X-Accel-Buffering", "'no'")
 
 	return &SSEReporter{
-		mu:   &sync.Mutex{},
-		resp: resp,
+		mu:       &sync.Mutex{},
+		resp:     resp,
+		buffer:   make([]string, 0, stay),
+		interval: interval,
+		stay:     stay,
 	}
 }
 
@@ -41,11 +50,17 @@ func (r SSEReporter) report(report any) error {
 	// report
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if _, err := fmt.Fprintf(r.resp.Writer, "data: %s\n\n", string(data)); err != nil {
-		slog.Error("reporter print error", "err", err)
-		return err
+	r.buffer = append(r.buffer, fmt.Sprintf("data: %s", string(data)))
+
+	if len(r.buffer) >= r.stay || time.Since(r.latest) > r.interval {
+		for _, line := range r.buffer {
+			fmt.Fprintln(r.resp.Writer, line)
+		}
+		fmt.Fprintln(r.resp.Writer)
+		r.resp.Flush()
+		r.latest = time.Now()
+		r.buffer = make([]string, 0, r.stay)
 	}
-	r.resp.Flush()
 
 	return nil
 }
@@ -66,10 +81,19 @@ func (r SSEReporter) ReportClose() error {
 	// report
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if _, err := fmt.Fprintf(r.resp.Writer, "event: close\ndata: SSE connection closed.\n\n"); err != nil {
-		slog.Error("reporter print error", "err", err)
-		return err
+	// send data if rest data in buffer
+	if len(r.buffer) > 0 {
+		for _, line := range r.buffer {
+			fmt.Fprintln(r.resp.Writer, line)
+		}
+		fmt.Fprintln(r.resp.Writer)
+		r.resp.Flush()
+		r.latest = time.Now()
+		r.buffer = make([]string, 0, r.stay)
 	}
+
+	// send close event with data
+	fmt.Fprintf(r.resp.Writer, "event: close\ndata: SSE connection closed.\n\n")
 	r.resp.Flush()
 
 	return nil

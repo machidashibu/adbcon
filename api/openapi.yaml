@@ -137,6 +137,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"            
+  /api/adb/logcat:
+    post:
+      summary: Execute adb logcat command and report result.
+      description: CommandResults is used for data within SSE response.
+      operationId: ExecuteAdbLogcat
+      parameters:
+        - name: args
+          description: Command arguments.
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/CommandArgs"
+          example: args=I%2Czone
+      requestBody:
+        $ref: "#/components/requestBodies/TargetList"
+      responses:
+        '200':
+          $ref: "#/components/responses/SSEResponse"
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"            
+
   /api/adb/reboot:
     post:
       summary: Execute adb reroot command and report result.

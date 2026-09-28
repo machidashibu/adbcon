@@ -23,7 +23,7 @@ Memo for development.
 | uninstall | x | |
 | bugreport | x | |
 | jdwp | x | |
-| logcat | x | |
+| logcat | o | disable GUI because screen freeze. |
 | disable-verity | x | |
 | enable-verity | x | |
 | keygen | x | |

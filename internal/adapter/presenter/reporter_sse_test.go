@@ -55,7 +55,7 @@ func testReportDeviceList(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	r := presenter.NewSSEReporter(c.Response())
+	r := presenter.NewSSEReporter(c.Response(), 500*time.Millisecond, 100)
 
 	devs := domain.DeviceList{
 		makeInfo("serial", "s1", "status", domain.Online, "product", "product1", "model", "model1", "device", "device1", "tid", 1),
@@ -85,7 +85,7 @@ func testReportClose(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	r := presenter.NewSSEReporter(c.Response())
+	r := presenter.NewSSEReporter(c.Response(), 500*time.Millisecond, 100)
 
 	expected := []string{
 		"event: close",
@@ -109,7 +109,7 @@ func testReportDevicesListMultiThread(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	r := presenter.NewSSEReporter(c.Response())
+	r := presenter.NewSSEReporter(c.Response(), 500*time.Millisecond, 100)
 
 	devs := domain.DeviceList{
 		makeInfo("serial", "s1", "status", domain.Online),
@@ -117,25 +117,34 @@ func testReportDevicesListMultiThread(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for range 10 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for range 5 {
 				r.ReportDeviceList(devs)
 				time.Sleep(1 * time.Second)
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
 
 	resp := model.CommandOutput(rec.Body.Bytes())
 	lines := resp.Lines()
-	if len(lines)%2 != 0 {
-		t.Fatalf("response lines must even numbers: %d", len(lines))
+	require.NotEmpty(t, lines)
+	require.Empty(t, lines[len(lines)-1]) // check last line is emty
+
+	inBlock := false
+	blockCount := 0
+	for index, line := range resp.Lines() {
+		if line != "" {
+			require.Truef(t, strings.HasPrefix(line, "data:"), "line %dth must start with 'data:': %s", index+1, line)
+			if !inBlock {
+				inBlock = true
+				blockCount++
+			}
+		} else {
+			inBlock = false
+		}
 	}
-	for index := 0; index < len(lines); index += 2 {
-		require.Truef(t, strings.HasPrefix(lines[index], "data:"), "each line must set of `data:` line and empty line: line=%d, text=%s", index, lines[index])
-		require.Empty(t, lines[index+1], "each line must set of `data:` line and empty line: line=%d, text=%s", index+1, lines[index+1])
-	}
+
+	require.NotEqual(t, 0, blockCount)
 }

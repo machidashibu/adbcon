@@ -18,11 +18,15 @@ import (
 
 type EchoHandler struct {
 	ucAdbDevices *usecase.ExecuteAdbDevicesUsecase
+	sseInterval  time.Duration
+	sseLimit     int
 }
 
 func NewEchoHandler(ucAdbDevices *usecase.ExecuteAdbDevicesUsecase) *EchoHandler {
 	return &EchoHandler{
 		ucAdbDevices: ucAdbDevices,
+		sseInterval:  100 * time.Millisecond, // TODO: specifed in config
+		sseLimit:     30,                     // TODO: specifed in config
 	}
 }
 
@@ -43,7 +47,7 @@ func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) 
 	interval, ok := controller.IntervalToDomain(params.Interval)
 
 	// prepare reporter
-	reporter := presenter.NewSSEReporter(ctx.Response())
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
 	// call usecase: execute command (immediate update current status)
 	updated, err := h.ucAdbDevices.Execute(ctx.Request().Context())
@@ -115,7 +119,7 @@ func (h *EchoHandler) ExecuteAdbPush(ctx echo.Context, params api.ExecuteAdbPush
 	}
 
 	// prepare reporter
-	reporter := presenter.NewSSEReporter(ctx.Response())
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
 	// start command
 	ch := exec.Start(ctx.Request().Context())
@@ -160,7 +164,7 @@ func (h *EchoHandler) ExecuteAdbPull(ctx echo.Context, params api.ExecuteAdbPull
 	}
 
 	// prepare reporter
-	reporter := presenter.NewSSEReporter(ctx.Response())
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
 	// start command
 	ch := exec.Start(ctx.Request().Context())
@@ -205,7 +209,52 @@ func (h *EchoHandler) ExecuteAdbShell(ctx echo.Context, params api.ExecuteAdbShe
 	}
 
 	// prepare reporter
-	reporter := presenter.NewSSEReporter(ctx.Response())
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+
+	// start command
+	ch := exec.Start(ctx.Request().Context())
+	for {
+		result, ok := <-ch
+		if !ok {
+			reporter.ReportClose()
+			break
+		}
+		if err := reporter.ReportCommandResult(result); err != nil {
+			slog.Error("command result report error", "err", err, "result", result)
+			return nil
+		}
+	}
+
+	return nil
+}
+
+// ExecuteAdbLogcat Execute adb logcat command and report result.
+// (POST /api/adb/logcat)
+func (h *EchoHandler) ExecuteAdbLogcat(ctx echo.Context, params api.ExecuteAdbLogcatParams) error {
+	// bind body
+	var body api.ExecuteAdbLogcatJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	slog.Debug("EchoHandler::ExecuteAdbLogcat", "params", params, "body", body)
+
+	// convert to domain (with validate)
+	args := controller.CommandArgsToDomain(params.Args)
+	targets, err := controller.SerialListToDomain(body)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
+	}
+
+	// parepare commands
+	exec := service.NewMultiCommand()
+	for _, serial := range targets {
+		cmd := infra.NewAdbCommandWithSerial(domain.CommandLogcat, serial, args...)
+		exec.Add(serial, cmd)
+	}
+
+	// prepare reporter
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
 	// start command
 	ch := exec.Start(ctx.Request().Context())
@@ -250,7 +299,7 @@ func (h *EchoHandler) ExecuteAdbReboot(ctx echo.Context, params api.ExecuteAdbRe
 	}
 
 	// prepare reporter
-	reporter := presenter.NewSSEReporter(ctx.Response())
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
 	// start command
 	ch := exec.Start(ctx.Request().Context())
@@ -294,7 +343,7 @@ func (h *EchoHandler) ExecuteAdbRoot(ctx echo.Context) error {
 	}
 
 	// prepare reporter
-	reporter := presenter.NewSSEReporter(ctx.Response())
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
 	// start command
 	ch := exec.Start(ctx.Request().Context())
@@ -338,7 +387,7 @@ func (h *EchoHandler) ExecuteAdbUnroot(ctx echo.Context) error {
 	}
 
 	// prepare reporter
-	reporter := presenter.NewSSEReporter(ctx.Response())
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
 	// start command
 	ch := exec.Start(ctx.Request().Context())
@@ -382,7 +431,7 @@ func (h *EchoHandler) ExecuteAdbStartServer(ctx echo.Context) error {
 	}
 
 	// prepare reporter
-	reporter := presenter.NewSSEReporter(ctx.Response())
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
 	// start command
 	ch := exec.Start(ctx.Request().Context())
@@ -426,7 +475,7 @@ func (h *EchoHandler) ExecuteAdbKillServer(ctx echo.Context) error {
 	}
 
 	// prepare reporter
-	reporter := presenter.NewSSEReporter(ctx.Response())
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
 	// start command
 	ch := exec.Start(ctx.Request().Context())
