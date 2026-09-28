@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"adbcon/internal/adapter/controller/todomain"
 	"adbcon/internal/adapter/model"
 	"adbcon/internal/domain"
 	"fmt"
@@ -47,7 +48,7 @@ func (a AdbDeviceParser) Parse(result domain.CommandOutput) (domain.DeviceList, 
 		// get serial
 		info[model.LabelSerial] = fields[0]
 		// get status
-		info[model.LabelStatus] = DeviceStatusToDomain(fields[1])
+		info[model.LabelStatus] = todomain.DeviceStatus(fields[1])
 
 		if len(fields) < 3 {
 			continue // short format

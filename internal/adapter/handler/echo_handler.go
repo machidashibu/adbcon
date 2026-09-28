@@ -2,7 +2,7 @@ package handler
 
 import (
 	"adbcon/api"
-	"adbcon/internal/adapter/controller"
+	"adbcon/internal/adapter/controller/todomain"
 	"adbcon/internal/adapter/presenter"
 	"adbcon/internal/adapter/presenter/apiconv"
 	"adbcon/internal/adapter/service"
@@ -43,8 +43,7 @@ func (h *EchoHandler) GetMainPage(ctx echo.Context) error {
 func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) error {
 	slog.Debug("EchoHandler::GetDevices", "params", params)
 
-	// to domain
-	interval, ok := controller.IntervalToDomain(params.Interval)
+	interval, priodical := todomain.Interval(params.Interval)
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
@@ -64,7 +63,7 @@ func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) 
 	}
 
 	// proceeds polling if interval is specified in query
-	if ok {
+	if priodical {
 		// start monitoring
 		polling := time.NewTicker(time.Duration(interval))
 		defer polling.Stop()
@@ -105,8 +104,8 @@ func (h *EchoHandler) ExecuteAdbPush(ctx echo.Context, params api.ExecuteAdbPush
 	slog.Debug("EchoHandler::ExecuteAdbPush", "params", params, "body", body)
 
 	// convert to domain (with validate)
-	args := controller.CommandArgsToDomain(&params.Args)
-	targets, err := controller.SerialListToDomain(body)
+	args := todomain.CommandArgs(&params.Args)
+	targets, err := todomain.SerialList(body)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
@@ -150,8 +149,8 @@ func (h *EchoHandler) ExecuteAdbPull(ctx echo.Context, params api.ExecuteAdbPull
 	slog.Debug("EchoHandler::ExecuteAdbPull", "params", params, "body", body)
 
 	// convert to domain (with validate)
-	args := controller.CommandArgsToDomain(&params.Args)
-	targets, err := controller.SerialListToDomain(body)
+	args := todomain.CommandArgs(&params.Args)
+	targets, err := todomain.SerialList(body)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
@@ -195,8 +194,8 @@ func (h *EchoHandler) ExecuteAdbShell(ctx echo.Context, params api.ExecuteAdbShe
 	slog.Debug("EchoHandler::ExecuteAdbShell", "params", params, "body", body)
 
 	// convert to domain (with validate)
-	args := controller.CommandArgsToDomain(&params.Args)
-	targets, err := controller.SerialListToDomain(body)
+	args := todomain.CommandArgs(&params.Args)
+	targets, err := todomain.SerialList(body)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
@@ -240,8 +239,8 @@ func (h *EchoHandler) ExecuteAdbLogcat(ctx echo.Context, params api.ExecuteAdbLo
 	slog.Debug("EchoHandler::ExecuteAdbLogcat", "params", params, "body", body)
 
 	// convert to domain (with validate)
-	args := controller.CommandArgsToDomain(params.Args)
-	targets, err := controller.SerialListToDomain(body)
+	args := todomain.CommandArgs(params.Args)
+	targets, err := todomain.SerialList(body)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
@@ -285,8 +284,8 @@ func (h *EchoHandler) ExecuteAdbReboot(ctx echo.Context, params api.ExecuteAdbRe
 	slog.Debug("EchoHandler::ExecuteAdbReboot", "body", body)
 
 	// convert to domain (with validate)
-	args := controller.RebootArgsToDomain(params.Args)
-	targets, err := controller.SerialListToDomain(body)
+	args := todomain.RebootArgs(params.Args)
+	targets, err := todomain.SerialList(body)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
@@ -330,7 +329,7 @@ func (h *EchoHandler) ExecuteAdbRoot(ctx echo.Context) error {
 	slog.Debug("EchoHandler::ExecuteAdbRoot", "body", body)
 
 	// convert to domain (with validate)
-	targets, err := controller.SerialListToDomain(body)
+	targets, err := todomain.SerialList(body)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
@@ -374,7 +373,7 @@ func (h *EchoHandler) ExecuteAdbUnroot(ctx echo.Context) error {
 	slog.Debug("EchoHandler::ExecuteAdbUnroot", "body", body)
 
 	// convert to domain (with validate)
-	targets, err := controller.SerialListToDomain(body)
+	targets, err := todomain.SerialList(body)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
@@ -418,7 +417,7 @@ func (h *EchoHandler) ExecuteAdbStartServer(ctx echo.Context) error {
 	slog.Debug("EchoHandler::ExecuteAdbStartServer", "body", body)
 
 	// convert to domain (with validate)
-	targets, err := controller.SerialListToDomain(body)
+	targets, err := todomain.SerialList(body)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
@@ -462,7 +461,7 @@ func (h *EchoHandler) ExecuteAdbKillServer(ctx echo.Context) error {
 	slog.Debug("EchoHandler::ExecuteAdbUnroot", "body", body)
 
 	// convert to domain (with validate)
-	targets, err := controller.SerialListToDomain(body)
+	targets, err := todomain.SerialList(body)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, apiconv.MakeBadRequest(err))
 	}
