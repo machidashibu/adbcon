@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -42,7 +43,7 @@ func TestAssets(t *testing.T) {
 		reqBody         io.Reader
 		respError       error
 		respCode        int
-		respContentType string
+		respContentType []string
 		respBody        []byte
 	}
 	testcases := []testcase{
@@ -61,7 +62,7 @@ func TestAssets(t *testing.T) {
 			reqPath:         "/main.html",
 			reqBody:         strings.NewReader(""),
 			respCode:        http.StatusOK,
-			respContentType: echo.MIMETextHTML,
+			respContentType: []string{echo.MIMETextHTML},
 			respBody:        testdataHtml,
 		},
 		{
@@ -79,7 +80,7 @@ func TestAssets(t *testing.T) {
 			reqPath:         "/styles.css",
 			reqBody:         strings.NewReader(""),
 			respCode:        http.StatusOK,
-			respContentType: contentTypeCss,
+			respContentType: []string{contentTypeCss},
 			respBody:        testdataCss,
 		},
 		{
@@ -97,7 +98,7 @@ func TestAssets(t *testing.T) {
 			reqPath:         "/script.js",
 			reqBody:         strings.NewReader(""),
 			respCode:        http.StatusOK,
-			respContentType: contentTypeJs,
+			respContentType: []string{echo.MIMEApplicationJSON, contentTypeJs},
 			respBody:        testdataJs,
 		},
 		{
@@ -164,8 +165,9 @@ func TestAssets(t *testing.T) {
 				// check to not occurred error and respons
 				require.NoError(t, f(c))
 				require.Equal(t, tc.respCode, rec.Code)
-				require.Truef(t, strings.HasPrefix(rec.Header().Get(echo.HeaderContentType), tc.respContentType),
-					"Not matched Content-Type, Actual: %s, Expect: %s", rec.Header().Get(echo.HeaderContentType), tc.respContentType)
+				contentType, _, err := mime.ParseMediaType(rec.Header().Get(echo.HeaderContentType))
+				require.NoError(t, err)
+				require.Contains(t, tc.respContentType, contentType)
 				require.Equal(t, tc.respBody, rec.Body.Bytes())
 			}
 		})

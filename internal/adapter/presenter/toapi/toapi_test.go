@@ -14,7 +14,7 @@ import (
 
 var errorTestDummy = errors.New("error test dummy")
 
-func CommandResult(t *testing.T) {
+func TestCommandResult(t *testing.T) {
 	t.Run("CommandResult", func(t *testing.T) {
 		result := toapi.CommandResult(model.NewCommandResult("serial1", []byte("test result")))
 		require.Equal(t, "serial1", result.Serial)
