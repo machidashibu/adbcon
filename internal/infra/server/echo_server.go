@@ -59,7 +59,8 @@ func (s *EchoServer) Start(ctx context.Context, config echoServerConfig, h api.S
 	}
 
 	addr := net.JoinHostPort(config.ServerBind(), config.ServerPort())
-	if err := s.srv.StartTLS(addr, serverCert, serverKey); isCiticalError(err) {
+	// if err := s.srv.StartTLS(addr, serverCert, serverKey); isCiticalError(err) {
+	if err := s.srv.Start(addr); isCiticalError(err) {
 		slog.Error("server start error", "err", err, "addr", addr)
 		return err
 	}

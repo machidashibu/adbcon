@@ -4,12 +4,6 @@ import (
 	_ "embed"
 )
 
-//go:embed assets/cert.pem
-var serverCert []byte
-
-//go:embed assets/key.pem
-var serverKey []byte
-
 //go:embed assets/html/main.html
 var htmlMain []byte
 

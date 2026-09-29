@@ -19,7 +19,7 @@ import (
 )
 
 // ServerUrlDefault defines the Server URL for default
-const ServerUrlDefault = "https://localhost:8080"
+const ServerUrlDefault = "http://localhost:8080"
 
 // Defines values for DeviceStatus.
 const (
@@ -512,7 +512,7 @@ var swaggerSpec = []string{
 	"BD0mhR126yOn7QV6j5y7dqMlD7r9k4Nu/6felu8bjT+OGw7u25PDMm13/XRwhEr3jwd/CzRV8LE1qAq5",
 	"04r9wavbI+mXRpIHxVYYKt+uopEJ2OY37/4N7WbsXD2FnRuwl6WOtUrdFJbllPbqp2O+Hu6B8/8Dzvxd",
 	"ewNy5q/33NvOEkBJwTcC5wYsyRiXJGeJ++yh8gquESXvGJdDlgBt3uTVb9NSm6185rXFN2S20PIJq+qB",
-	"QQ9uPgy8JJ+WmxrMGCasEJgTCy1oj6bW5qbXbgsVMZEqY3tnnbMOffz0+N8AAAD//w==",
+	"QQ9uPgy8JJ+WmxrMGCasEJgTCy1oj6bW5r12W6iIiVQZ2zvrnHXo46fH/wYAAP//",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,
