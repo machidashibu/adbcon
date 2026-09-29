@@ -33,7 +33,7 @@ Run the generated executable file.
 $ adbcon
 ```
 
-Access to `https://localhost:8080/gui` by WEB browser.
+Access to `http://localhost:8080/gui` by WEB browser.
 
 You may ignore if the browser notifies means "access to not secure page".
 
