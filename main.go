@@ -39,7 +39,7 @@ func run() int {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	// parepa database
+	// prepare database
 	dbStatus := new(database.StubDatabase)
 
 	// start API server

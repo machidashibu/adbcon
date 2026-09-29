@@ -19,10 +19,10 @@ This tool provides GUI for ADB command on WEB browser.
 
 ### Build
 
-Execute following command, executable file is generated. (`adbcon.exe` for windows)
+Execute following command, executable file is generated. (`adbcon.exe` for windows, adbcon for other OS)
 
 ```bash
-$ go build
+$ task build
 ```
 
 ### Run
@@ -35,10 +35,9 @@ $ adbcon
 
 Access to `http://localhost:8080/gui` by WEB browser.
 
-You may ignore if the browser notifies means "access to not secure page".
-
 ### References
 
 * [Open API v3.0.4](https://spec.openapis.org/oas/v3.0.4.html)
 * [oapi-codegen](https://github.com/oapi-codegen) - Apache-2.0 license
 * [Echo v4](https://echo.labstack.com/) - MIT license
+* [go-task](https://github.com/go-task/task) - MIT license
