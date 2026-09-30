@@ -1,3 +1,3 @@
 pushd "%~dp0"
-curl https://localhost:8080/api/adb/kill-server -X POST --cacert "..\internal\infra\server\assets\cert.pem" -H "Content-Type: application/json" -d@serials.json
+curl http://localhost:8080/api/adb/kill-server -X POST
 popd

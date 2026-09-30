@@ -74,11 +74,15 @@ export class DevicesList {
     clearResult(...serials) {
         if(serials.length == 0) {
             // all
-            this.#list.forEach((dev) => dev.clearResult());
+            this.#list.forEach((dev) => {
+                dev.hideResult();
+                dev.clearResult()
+            });
         } else {
             // target only
             this.#list.forEach((dev) => {
                 if(serials.includes(dev.serial())) {
+                    dev.hideResult();
                     dev.clearResult();
                 }
             });
@@ -191,20 +195,29 @@ export class DeviceCard {
 
 export class CommandResult {
     #view;
-
-    // <pre class="console device-console hide"></ul>
-    constructor() {
-        this.#view = document.createElement('pre');
-        this.#view.classList.add("console");
-        this.#view.classList.add("device-console");
-        this.#view.classList.add("hide");
+    
+    constructor(view) {
+        if(view) {
+            this.#view = view;
+        } else {
+            // <pre class="console device-console hide"></ul>
+            this.#view = document.createElement('pre');
+            this.#view.classList.add("console");
+            this.#view.classList.add("device-console");
+            this.#view.classList.add("hide");
+        }
         this.clear();
     }
 
     view() { return this.#view; }
     clear() { this.#view.textContent = ''; }
-    add(text) {
-        this.#view.textContent += text + '\n';
+    add(text, ...classes) {
+        const line = document.createElement('span');
+        line.textContent += text + '\n';
+        if(classes) {
+            line.classList.add(...classes);
+        }
+        this.#view.appendChild(line);
         // scrool to bottom
         this.#view.scrollTop = this.#view.scrollHeight;
     }
@@ -218,11 +231,11 @@ export class CommandPalette {
     #viewPost;
     #viewCancel;
     #viewProgress;
-    #viewError;
     #viewClearResult;
     #viewFixResult;
     #viewFixResultHeight;
 
+    #result;
     #cssDeviceConsole;
 
     constructor(view) {
@@ -231,11 +244,11 @@ export class CommandPalette {
         this.#viewPost = document.getElementById('command-post');
         this.#viewCancel = document.getElementById('command-cancel');
         this.#viewProgress = document.getElementById('command-progress');
-        this.#viewError = document.getElementById('command-error');
         this.#viewClearResult = document.getElementById('clear-result');
         this.#viewFixResult = document.getElementById('fix-result');
         this.#viewFixResultHeight = document.getElementById('fix-result-height');
 
+        this.#result = new CommandResult(document.getElementById('command-result'));
         this.#cssDeviceConsole = new CSS('pre.device-console');
 
         // add selected event to command name
@@ -264,14 +277,11 @@ export class CommandPalette {
     }
 
     clear() {
-        this.#viewError.textContent = '';
-        this.#viewError.classList.add('hide');
+        // no action
     }
     
-    error(message) {
-        this.#viewError.classList.remove('hide');
-        this.#viewError.textContent = message;
-    }
+    normal(message) { this.#result.add(message); }
+    error(message) { this.#result.add(message, 'error'); }
 
     name() { return this.#viewName.value; }
 
@@ -301,6 +311,7 @@ export class CommandPalette {
     }
 
     isClearResult() { return this.#viewClearResult.checked; }
+    isGeneralCommand() { return this.#viewName.options[this.#viewName.selectedIndex].dataset.generalCommand; }
 }
 
 export class CSS {

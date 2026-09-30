@@ -14,6 +14,9 @@ tasks:
     desc: build application
     sources:
       - '**/*.go'
+      - '**/*.html'
+      - '**/*.css'
+      - '**/*.js'
     generates:
       - '{{.BINARY_NAME}}'
     cmds:
@@ -44,7 +47,7 @@ tasks:
   apigen:
     desc: generate Echo server code from Open API definition
     sources:
-      - openapi.yaml
+      - ./api/openapi.yaml
     cmds:
       - go tool oapi-codegen -config ./api/config.yaml ./api/openapi.yaml
 

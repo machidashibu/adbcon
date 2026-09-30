@@ -22,7 +22,7 @@ This tool provides GUI for ADB command on WEB browser.
 Execute following command, executable file is generated. (`adbcon.exe` for windows, adbcon for other OS)
 
 ```bash
-$ task build
+$ go tool task build
 ```
 
 ### Run
@@ -35,7 +35,7 @@ $ adbcon
 
 Access to `http://localhost:8080/gui` by WEB browser.
 
-### References
+## Credits
 
 * [Open API v3.0.4](https://spec.openapis.org/oas/v3.0.4.html)
 * [oapi-codegen](https://github.com/oapi-codegen) - Apache-2.0 license

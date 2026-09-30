@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADB Console</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,6 +13,7 @@
     <main>
         <form id="command-palette"> <!-- command palette field -->
             <h2>Command Palette</h2>
+            <pre id="command-result" class="console"></pre>
             <div class="console">
                 &gt;
                 <select id="command-name">
@@ -26,21 +24,20 @@
                     <option value="adb/reboot">adb reboot</option>
                     <option value="adb/root">adb root</option>
                     <option value="adb/unroot">adb unroot</option>
-                    <option value="adb/start-server">adb start-server</option>
-                    <option value="adb/kill-server">adb kill-server</option>
+                    <option value="adb/start-server" data-general-command="true">adb start-server</option>
+                    <option value="adb/kill-server" data-general-command="true">adb kill-server</option>
                 </select>
                 <input type="text" id="command-arguments" placeholder="Enter command arguments" size="64" />
                 <button id="command-post" type="submit">POST</button>
                 <button id="command-cancel" disabled>CANCEL</button>
             </div>
             <div id="command-progress" class="hide"><div class="spinner"></div> Command executing...</div>
-            <div id="command-error" class="hide"></div>
             <details>
                 <summary><h3>Options</h3></summary>
                 <menu class="vertical-option-menu">
                     <li>
                         <input type="checkbox" id="clear-result" checked />
-                        <label for="clear-result">Clears all result before post the command.</label>
+                        <label for="clear-result">Clear all result before post the command.</label>
                     </li>
                     <li>
                         <input type="checkbox" id="fix-result" checked />

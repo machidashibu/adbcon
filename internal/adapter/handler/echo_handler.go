@@ -3,6 +3,7 @@ package handler
 import (
 	"adbcon/api"
 	"adbcon/internal/adapter/controller/todomain"
+	"adbcon/internal/adapter/model"
 	"adbcon/internal/adapter/presenter"
 	"adbcon/internal/adapter/presenter/toapi"
 	"adbcon/internal/adapter/service"
@@ -404,42 +405,31 @@ func (h *EchoHandler) ExecuteAdbUnroot(ctx echo.Context) error {
 // ExecuteAdbStartServer Execute adb start-server command and report result.
 // (POST /api/adb/start-server)
 func (h *EchoHandler) ExecuteAdbStartServer(ctx echo.Context) error {
-	// bind body
-	var body api.ExecuteAdbStartServerJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
-	}
-
-	slog.Debug("EchoHandler::ExecuteAdbStartServer", "body", body)
-
-	// convert to domain (with validate)
-	targets, err := todomain.SerialList(body)
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
-	}
+	slog.Debug("EchoHandler::ExecuteAdbStartServer")
 
 	// parepare commands
-	exec := service.NewMultiCommand()
-	for _, serial := range targets {
-		cmd := infra.NewAdbCommandWithSerial(domain.CommandStartServer, serial)
-		exec.Add(serial, cmd)
-	}
+	cmd := infra.NewAdbCommand(domain.CommandStartServer)
 
 	// prepare reporter
+	// TODO: changes for unary response
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
-	// start command
-	ch := exec.Start(ctx.Request().Context())
-	for {
-		result, ok := <-ch
-		if !ok {
-			reporter.ReportClose()
-			break
-		}
-		if err := reporter.ReportCommandResult(result); err != nil {
-			slog.Error("command result report error", "err", err, "result", result)
-			return nil
-		}
+	// run command
+	result, err := cmd.Run(ctx.Request().Context())
+	if err != nil {
+		return nil
+	}
+	slog.Debug("adb start-server", "result", result.String())
+
+	// report result
+	// TODO: changes for unary response
+	if err := reporter.ReportCommandResult(model.NewCommandResult("", result.Bytes())); err != nil {
+		slog.Error("command result report error", "err", err, "result", result)
+		return nil
+	}
+	if err := reporter.ReportClose(); err != nil {
+		slog.Error("command result report error", "err", err, "result", result)
+		return nil
 	}
 
 	return nil
@@ -448,42 +438,30 @@ func (h *EchoHandler) ExecuteAdbStartServer(ctx echo.Context) error {
 // ExecuteAdbKillServer Execute adb kill-server command and report result.
 // (POST /api/adb/kill-server)
 func (h *EchoHandler) ExecuteAdbKillServer(ctx echo.Context) error {
-	// bind body
-	var body api.ExecuteAdbKillServerJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
-	}
-
-	slog.Debug("EchoHandler::ExecuteAdbUnroot", "body", body)
-
-	// convert to domain (with validate)
-	targets, err := todomain.SerialList(body)
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, toapi.MakeBadRequest(err))
-	}
+	slog.Debug("EchoHandler::ExecuteAdbKillServer")
 
 	// parepare commands
-	exec := service.NewMultiCommand()
-	for _, serial := range targets {
-		cmd := infra.NewAdbCommandWithSerial(domain.CommandKillServer, serial)
-		exec.Add(serial, cmd)
-	}
+	cmd := infra.NewAdbCommand(domain.CommandKillServer)
 
 	// prepare reporter
+	// TODO: changes for unary response
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 
-	// start command
-	ch := exec.Start(ctx.Request().Context())
-	for {
-		result, ok := <-ch
-		if !ok {
-			reporter.ReportClose()
-			break
-		}
-		if err := reporter.ReportCommandResult(result); err != nil {
-			slog.Error("command result report error", "err", err, "result", result)
-			return nil
-		}
+	// run command
+	result, err := cmd.Run(ctx.Request().Context())
+	if err != nil {
+		return nil
+	}
+
+	// report result
+	// TODO: changes for unary response
+	if err := reporter.ReportCommandResult(model.NewCommandResult("", result.Bytes())); err != nil {
+		slog.Error("command result report error", "err", err, "result", result)
+		return nil
+	}
+	if err := reporter.ReportClose(); err != nil {
+		slog.Error("command result report error", "err", err, "result", result)
+		return nil
 	}
 
 	return nil

@@ -50,10 +50,6 @@ input#command-arguments {
     border: none;
 }
 
-div#command-error {
-    color: red;
-}
-
 input#fix-result-height {
     text-align: right;
 }
@@ -91,6 +87,15 @@ pre.device-console {
     word-break: break-all;
 }
 
+pre#command-result {
+    line-height: 1.5;
+    max-height: 7.5em;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    height: 7.5em;
+}
+
 div#command-progress {
     display: flex;
     align-items: center;
@@ -121,7 +126,8 @@ div.spinner {
 
 .console {
     color: white !important;
-    font-family: "Noto Sans Mono", "Noto Sans JP", monospace !important;
+    font-family: monospace, monospace !important;
+    font-size: 1em;
     background-color: black !important;
     margin: 8px;
     padding: 4px;
@@ -137,4 +143,12 @@ div.spinner {
 
 .offline, .unknown, .unauthenticated {
     color: gray !important
+}
+
+.error {
+    color: red;
+}
+
+.warning {
+    color: yellow;
 }

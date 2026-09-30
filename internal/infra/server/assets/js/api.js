@@ -14,22 +14,28 @@ export function PostAdbCommand(cmd, targets, args, success, fail) {
         var url = "/api/" + cmd;
         if(args && args.length != 0) {
             url += "?args=" + encodeURIComponent(args.join(','));
-        } 
+        }
+
+        // make requestInit
+        const init = {
+            method: 'POST',
+            signal: controller.signal
+        };
+        if(targets.length > 0) {
+            init.headers = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'text/event-stream'
+                };
+            init.body = JSON.stringify(targets);
+        }
 
         try {
             // fetch
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'text/event-stream'
-                },
-                body: JSON.stringify(targets),
-                signal: controller.signal
-            });
+            const response = await fetch(url, init);
 
             if (!response.ok) {
-                throw new Error(`HTTP Error: ${response.status}`);
+                const problemDetails = await JSON.parse(rawData);
+                throw new Error(`HTTP Error(${problemDetails.status}): ${response.detail}`);
             }
 
             // prepare from stream by UTF-8
@@ -68,7 +74,7 @@ export function PostAdbCommand(cmd, targets, args, success, fail) {
                         const rawData = dataLine.replace(/^data:\s*/, '');
                         console.log('received SSE message', "data=", rawData);
                         try {
-                            const parsedData = JSON.parse(rawData);
+                            const parsedData = await JSON.parse(rawData);
                             
                             if(success) { success(parsedData); }
                         } catch (e) {

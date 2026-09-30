@@ -51,18 +51,10 @@ window.onload = () => {
     document.getElementById('command-post').addEventListener('click', (e) => {
         console.log("command post");
 
-        // prevent to reload page
-        e.preventDefault();
+        e.preventDefault(); // prevent to reload page
 
         // clear and hide command error view
         command.clear();
-
-        // get target serials
-        const targets = devices.enabledDevices();
-        if(targets.length == 0) {
-            command.error('ERROR: Please select target device(s) more one.');
-            return;
-        }
 
         // show result view f all devices
         // devices.showResult(targets);
@@ -71,9 +63,23 @@ window.onload = () => {
             devices.clearResult();
         }
 
+        // get target serials
+        let targets = [];
+        if(command.isGeneralCommand()) {
+            // general command
+            command.normal(command.text());
+        } else {
+            // device command
+            targets = devices.enabledDevices();
+            if(targets.length == 0) {
+                command.error('ERROR: Please select target device(s) more one.');
+                return;
+            }
+            targets.forEach((t) => command.normal(t + command.text()));
+        }
+
         // fetch to server
         command.running();
-        devices.addResult(command.text(), ...targets);
         cancelPostAdbCommand = PostAdbCommand(command.name(), targets, command.args(), 
             (data, disconnected) => {
                 if(disconnected) {
@@ -81,7 +87,11 @@ window.onload = () => {
                     command.completed();
                 } else {
                     console.log('update command result: ', data);
-                    devices.addResult(data.result, data.serial);
+                    if(data.serial != "") {
+                        devices.addResult(data.result, data.serial);
+                    } else {
+                        command.normal(data.result);
+                    }
                 }
             },
             (message) => {
@@ -96,9 +106,8 @@ window.onload = () => {
     // add command cancel event
     document.getElementById('command-cancel').addEventListener('click', (e) => {
         console.log("command cancel");
-
-        // prevent to reload page
-        e.preventDefault();
+        
+        e.preventDefault(); // prevent to reload page
 
         if(cancelPostAdbCommand) {
             cancelPostAdbCommand();
