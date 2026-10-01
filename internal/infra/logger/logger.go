@@ -18,7 +18,7 @@ type loggerConfig interface {
 // It merge handler to write file more than Debug level and handler to output stdout more than Info level.
 func Setup(config loggerConfig) error {
 	// open log file
-	if err := os.MkdirAll(path.Dir(config.LogFilePath()), 888); err != nil {
+	if err := os.MkdirAll(path.Dir(config.LogFilePath()), 0755); err != nil {
 		Fatal(fmt.Errorf("%s: %s", err.Error(), path.Dir(config.LogFilePath())))
 		return err
 	}
