@@ -12,17 +12,7 @@ import (
 	"os/signal"
 )
 
-func abort(err error) int {
-	slog.Error(err.Error())
-	return 1
-}
-
 func main() {
-	// run
-	os.Exit(run())
-}
-
-func run() int {
 	// read configuration
 	cfg := new(config.Config)
 	cfg.Read("config.yaml")
@@ -30,9 +20,15 @@ func run() int {
 
 	// setup logger
 	if err := logger.Setup(cfg); err != nil {
-		return abort(err)
+		os.Exit(logger.Fatal(err))
 	}
+	defer logger.Close()
 
+	// run
+	os.Exit(run(cfg))
+}
+
+func run(cfg *config.Config) int {
 	slog.Info("start application")
 
 	// create application context
@@ -57,10 +53,10 @@ func run() int {
 		slog.Info("post processing...")
 		// shutdown server
 		if err := apiServer.Shutdown(ctx); err != nil {
-			return abort(err)
+			return logger.Fatal(err)
 		}
 	case err := <-apiError:
-		return abort(err)
+		return logger.Fatal(err)
 	}
 	slog.Info("terminate application")
 
