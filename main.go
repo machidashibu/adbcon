@@ -15,8 +15,9 @@ import (
 func main() {
 	// read configuration
 	cfg := new(config.Config)
-	cfg.Read("config.yaml")
-	// do not check error, because use default configrations if failed read.
+	if err := cfg.Read("config.yaml"); err != nil {
+		os.Exit(logger.Fatal(err))
+	}
 
 	// setup logger
 	if err := logger.Setup(cfg); err != nil {
@@ -42,7 +43,7 @@ func run(cfg *config.Config) int {
 	apiServer := server.NewEchoServer()
 	apiError := make(chan error, 1)
 	go func() {
-		if err := apiServer.Start(ctx, cfg, handler.Factory(dbStatus)); err != nil {
+		if err := apiServer.Start(ctx, cfg, handler.Factory(dbStatus, cfg)); err != nil {
 			apiError <- err
 		}
 	}()

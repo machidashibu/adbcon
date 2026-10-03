@@ -33,7 +33,7 @@ func TestDeviceInfo(t *testing.T) {
 		model.LabelStatus:  domain.Online,
 		model.LabelProduct: "product1",
 		model.LabelModel:   "model1",
-		model.LabelDecide:  "device1",
+		model.LabelDevice:  "device1",
 		model.LabelTid:     1,
 	})
 	require.Equal(t, api.DeviceInfo{
@@ -51,7 +51,7 @@ func TestShortDeviceInfo(t *testing.T) {
 		model.LabelStatus:  domain.Online,
 		model.LabelProduct: "product1",
 		model.LabelModel:   "model1",
-		model.LabelDecide:  "device1",
+		model.LabelDevice:  "device1",
 		model.LabelTid:     1,
 	})
 	require.Equal(t, api.DeviceInfo{Serial: "serial1", Status: api.Online, Model: new("model1")}, info)
@@ -64,7 +64,7 @@ func TestDeviceList(t *testing.T) {
 			model.LabelStatus:  domain.Online,
 			model.LabelProduct: "product1",
 			model.LabelModel:   "model1",
-			model.LabelDecide:  "device1",
+			model.LabelDevice:  "device1",
 			model.LabelTid:     1,
 		},
 		model.DeviceInfo{
@@ -72,7 +72,7 @@ func TestDeviceList(t *testing.T) {
 			model.LabelStatus:  domain.Offline,
 			model.LabelProduct: "product2",
 			model.LabelModel:   "model2",
-			model.LabelDecide:  "device2",
+			model.LabelDevice:  "device2",
 			model.LabelTid:     2,
 		},
 		model.DeviceInfo{
@@ -80,7 +80,7 @@ func TestDeviceList(t *testing.T) {
 			model.LabelStatus:  domain.UnknownDevice,
 			model.LabelProduct: "product3",
 			model.LabelModel:   "model3",
-			model.LabelDecide:  "device3",
+			model.LabelDevice:  "device3",
 			model.LabelTid:     2,
 		},
 	})

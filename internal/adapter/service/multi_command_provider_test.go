@@ -24,7 +24,7 @@ func main() {
 `
 
 func TestMultiCommand(t *testing.T) {
-	multi := service.NewMultiCommand().
+	multi := service.NewMultiCommandProvider().
 		Add("S1", infra.NewCommand("go", "run", "-e", testcode)).
 		Add("S2", infra.NewCommand("go", "run", "-e", testcode)).
 		Add("S3", infra.NewCommand("go", "run", "-e", testcode))
@@ -34,7 +34,8 @@ func TestMultiCommand(t *testing.T) {
 
 	// testing
 	results := []domain.CommandResult{}
-	ch := multi.Start(ctx)
+	ch, err := multi.Start(ctx)
+	require.NoError(t, err)
 	testing := true
 	for testing {
 		select {

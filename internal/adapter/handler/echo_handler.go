@@ -3,7 +3,6 @@ package handler
 import (
 	"adbcon/api"
 	"adbcon/internal/adapter/controller/todomain"
-	"adbcon/internal/adapter/model"
 	"adbcon/internal/adapter/presenter"
 	"adbcon/internal/adapter/presenter/toapi"
 	"adbcon/internal/adapter/service"
@@ -17,17 +16,29 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type EchoHandler struct {
-	ucAdbDevices *usecase.ExecuteAdbDevicesUsecase
-	sseInterval  time.Duration
-	sseLimit     int
+type handlerConfig interface {
+	ServerSseInterval() time.Duration
+	ServerSseLimit() int
 }
 
-func NewEchoHandler(ucAdbDevices *usecase.ExecuteAdbDevicesUsecase) *EchoHandler {
+type EchoHandler struct {
+	ucUpdate           *usecase.UpdateDeviceListUsecase
+	ucPeriodicalUpdate *usecase.PeriodicalUpdateDeviceListUsecase
+	ucExecute          *usecase.ExecuteAdbCommand
+	sseInterval        time.Duration
+	sseLimit           int
+}
+
+func NewEchoHandler(config handlerConfig,
+	ucUpdate *usecase.UpdateDeviceListUsecase,
+	ucPeriodicalUpdate *usecase.PeriodicalUpdateDeviceListUsecase,
+	ucExecute *usecase.ExecuteAdbCommand) *EchoHandler {
 	return &EchoHandler{
-		ucAdbDevices: ucAdbDevices,
-		sseInterval:  100 * time.Millisecond, // TODO: specifed in config
-		sseLimit:     30,                     // TODO: specifed in config
+		ucUpdate:           ucUpdate,
+		ucPeriodicalUpdate: ucPeriodicalUpdate,
+		ucExecute:          ucExecute,
+		sseInterval:        config.ServerSseInterval(),
+		sseLimit:           config.ServerSseLimit(),
 	}
 }
 
@@ -44,45 +55,23 @@ func (h *EchoHandler) GetMainPage(ctx echo.Context) error {
 func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) error {
 	slog.Debug("EchoHandler::GetDevices", "params", params)
 
+	// convert to domain
 	interval, priodical := todomain.Interval(params.Interval)
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
-
-	// call usecase: execute command (immediate update current status)
-	updated, err := h.ucAdbDevices.Execute(ctx.Request().Context())
-	if err != nil {
-		slog.Error("adb devices usecase error", "err", err)
-		return nil // disconnect from server
-	}
-	// report to client
-	if err := reporter.ReportDeviceList(updated); err != nil {
-		slog.Error("device list report error", "err", err, "updated", updated)
-		return nil // disconnect from server
-	}
+	defer reporter.ReportClose()
 
 	// proceeds polling if interval is specified in query
 	if priodical {
-		// start monitoring
-		polling := time.NewTicker(time.Duration(interval))
-		defer polling.Stop()
-		for {
-			select {
-			case <-ctx.Request().Context().Done():
-				return nil // disconnect
-			case <-polling.C:
-				// call usecase: execute command (periodical update status)
-				updated, err := h.ucAdbDevices.Execute(ctx.Request().Context())
-				if err != nil {
-					slog.Error("adb devices usecase error", "err", err)
-					return nil // disconnect from server
-				}
-				// report to client
-				if err := reporter.ReportDeviceList(updated); err != nil {
-					slog.Error("device list report error", "err", err, "updated", updated)
-					return nil // disconnect from server
-				}
-			}
+		if err := h.ucPeriodicalUpdate.Update(ctx.Request().Context(), reporter, interval); err != nil {
+			slog.Error("periodical update error", "err", err)
+			return nil
+		}
+	} else {
+		if err := h.ucUpdate.Update(ctx.Request().Context(), reporter, interval); err != nil {
+			slog.Error("periodical update error", "err", err)
+			return nil
 		}
 	}
 
@@ -100,7 +89,7 @@ func (h *EchoHandler) ExecuteAdbPush(ctx echo.Context, params api.ExecuteAdbPush
 
 	slog.Debug("EchoHandler::ExecuteAdbPush", "params", params, "body", body)
 
-	// convert to domain (with validate)
+	// convert to domain
 	args := todomain.CommandArgs(&params.Args)
 	targets, err := todomain.SerialList(body)
 	if err != nil {
@@ -108,27 +97,19 @@ func (h *EchoHandler) ExecuteAdbPush(ctx echo.Context, params api.ExecuteAdbPush
 	}
 
 	// parepare commands
-	exec := service.NewMultiCommand()
+	exec := service.NewMultiCommandProvider()
 	for _, serial := range targets {
-		cmd := infra.NewAdbCommandWithSerial(domain.CommandPush, serial, args...)
-		exec.Add(serial, cmd)
+		exec.Add(serial, infra.NewAdbCommandWithSerial(domain.CommandPush, serial))
 	}
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
 
-	// start command
-	ch := exec.Start(ctx.Request().Context())
-	for {
-		result, ok := <-ch
-		if !ok {
-			reporter.ReportClose()
-			break
-		}
-		if err := reporter.ReportCommandResult(result); err != nil {
-			slog.Error("command result report error", "err", err, "result", result)
-			return nil
-		}
+	// execute command
+	if err := h.ucExecute.Execute(ctx.Request().Context(), reporter, exec, args...); err != nil {
+		slog.Error("excute command error", "err", err, "cmd", domain.CommandPush, "args", args)
+		return nil
 	}
 
 	return nil
@@ -153,27 +134,19 @@ func (h *EchoHandler) ExecuteAdbPull(ctx echo.Context, params api.ExecuteAdbPull
 	}
 
 	// parepare commands
-	exec := service.NewMultiCommand()
+	exec := service.NewMultiCommandProvider()
 	for _, serial := range targets {
-		cmd := infra.NewAdbCommandWithSerial(domain.CommandPull, serial, args...)
-		exec.Add(serial, cmd)
+		exec.Add(serial, infra.NewAdbCommandWithSerial(domain.CommandPull, serial))
 	}
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
 
-	// start command
-	ch := exec.Start(ctx.Request().Context())
-	for {
-		result, ok := <-ch
-		if !ok {
-			reporter.ReportClose()
-			break
-		}
-		if err := reporter.ReportCommandResult(result); err != nil {
-			slog.Error("command result report error", "err", err, "result", result)
-			return nil
-		}
+	// execute command
+	if err := h.ucExecute.Execute(ctx.Request().Context(), reporter, exec, args...); err != nil {
+		slog.Error("excute command error", "err", err, "cmd", domain.CommandPull, "args", args)
+		return nil
 	}
 
 	return nil
@@ -198,27 +171,19 @@ func (h *EchoHandler) ExecuteAdbShell(ctx echo.Context, params api.ExecuteAdbShe
 	}
 
 	// parepare commands
-	exec := service.NewMultiCommand()
+	exec := service.NewMultiCommandProvider()
 	for _, serial := range targets {
-		cmd := infra.NewAdbCommandWithSerial(domain.CommandShell, serial, args...)
-		exec.Add(serial, cmd)
+		exec.Add(serial, infra.NewAdbCommandWithSerial(domain.CommandShell, serial))
 	}
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
 
-	// start command
-	ch := exec.Start(ctx.Request().Context())
-	for {
-		result, ok := <-ch
-		if !ok {
-			reporter.ReportClose()
-			break
-		}
-		if err := reporter.ReportCommandResult(result); err != nil {
-			slog.Error("command result report error", "err", err, "result", result)
-			return nil
-		}
+	// execute command
+	if err := h.ucExecute.Execute(ctx.Request().Context(), reporter, exec, args...); err != nil {
+		slog.Error("excute command error", "err", err, "cmd", domain.CommandShell, "args", args)
+		return nil
 	}
 
 	return nil
@@ -243,27 +208,19 @@ func (h *EchoHandler) ExecuteAdbLogcat(ctx echo.Context, params api.ExecuteAdbLo
 	}
 
 	// parepare commands
-	exec := service.NewMultiCommand()
+	exec := service.NewMultiCommandProvider()
 	for _, serial := range targets {
-		cmd := infra.NewAdbCommandWithSerial(domain.CommandLogcat, serial, args...)
-		exec.Add(serial, cmd)
+		exec.Add(serial, infra.NewAdbCommandWithSerial(domain.CommandLogcat, serial))
 	}
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
 
-	// start command
-	ch := exec.Start(ctx.Request().Context())
-	for {
-		result, ok := <-ch
-		if !ok {
-			reporter.ReportClose()
-			break
-		}
-		if err := reporter.ReportCommandResult(result); err != nil {
-			slog.Error("command result report error", "err", err, "result", result)
-			return nil
-		}
+	// execute command
+	if err := h.ucExecute.Execute(ctx.Request().Context(), reporter, exec, args...); err != nil {
+		slog.Error("excute command error", "err", err, "cmd", domain.CommandLogcat, "args", args)
+		return nil
 	}
 
 	return nil
@@ -288,27 +245,19 @@ func (h *EchoHandler) ExecuteAdbReboot(ctx echo.Context, params api.ExecuteAdbRe
 	}
 
 	// parepare commands
-	exec := service.NewMultiCommand()
+	exec := service.NewMultiCommandProvider()
 	for _, serial := range targets {
-		cmd := infra.NewAdbCommandWithSerial(domain.CommandReboot, serial, args...)
-		exec.Add(serial, cmd)
+		exec.Add(serial, infra.NewAdbCommandWithSerial(domain.CommandReboot, serial))
 	}
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
 
-	// start command
-	ch := exec.Start(ctx.Request().Context())
-	for {
-		result, ok := <-ch
-		if !ok {
-			reporter.ReportClose()
-			break
-		}
-		if err := reporter.ReportCommandResult(result); err != nil {
-			slog.Error("command result report error", "err", err, "result", result)
-			return nil
-		}
+	// execute command
+	if err := h.ucExecute.Execute(ctx.Request().Context(), reporter, exec, args...); err != nil {
+		slog.Error("excute command error", "err", err, "cmd", domain.CommandReboot, "args", args)
+		return nil
 	}
 
 	return nil
@@ -332,27 +281,19 @@ func (h *EchoHandler) ExecuteAdbRoot(ctx echo.Context) error {
 	}
 
 	// parepare commands
-	exec := service.NewMultiCommand()
+	exec := service.NewMultiCommandProvider()
 	for _, serial := range targets {
-		cmd := infra.NewAdbCommandWithSerial(domain.CommandRoot, serial)
-		exec.Add(serial, cmd)
+		exec.Add(serial, infra.NewAdbCommandWithSerial(domain.CommandRoot, serial))
 	}
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
 
-	// start command
-	ch := exec.Start(ctx.Request().Context())
-	for {
-		result, ok := <-ch
-		if !ok {
-			reporter.ReportClose()
-			break
-		}
-		if err := reporter.ReportCommandResult(result); err != nil {
-			slog.Error("command result report error", "err", err, "result", result)
-			return nil
-		}
+	// execute command
+	if err := h.ucExecute.Execute(ctx.Request().Context(), reporter, exec); err != nil {
+		slog.Error("excute command error", "err", err, "cmd", domain.CommandRoot)
+		return nil
 	}
 
 	return nil
@@ -376,27 +317,19 @@ func (h *EchoHandler) ExecuteAdbUnroot(ctx echo.Context) error {
 	}
 
 	// parepare commands
-	exec := service.NewMultiCommand()
+	exec := service.NewMultiCommandProvider()
 	for _, serial := range targets {
-		cmd := infra.NewAdbCommandWithSerial(domain.CommandUnroot, serial)
-		exec.Add(serial, cmd)
+		exec.Add(serial, infra.NewAdbCommandWithSerial(domain.CommandUnroot, serial))
 	}
 
 	// prepare reporter
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
 
-	// start command
-	ch := exec.Start(ctx.Request().Context())
-	for {
-		result, ok := <-ch
-		if !ok {
-			reporter.ReportClose()
-			break
-		}
-		if err := reporter.ReportCommandResult(result); err != nil {
-			slog.Error("command result report error", "err", err, "result", result)
-			return nil
-		}
+	// execute command
+	if err := h.ucExecute.Execute(ctx.Request().Context(), reporter, exec); err != nil {
+		slog.Error("excute command error", "err", err, "cmd", domain.CommandUnroot)
+		return nil
 	}
 
 	return nil
@@ -407,28 +340,16 @@ func (h *EchoHandler) ExecuteAdbUnroot(ctx echo.Context) error {
 func (h *EchoHandler) ExecuteAdbStartServer(ctx echo.Context) error {
 	slog.Debug("EchoHandler::ExecuteAdbStartServer")
 
-	// parepare commands
+	// prepare command
 	cmd := infra.NewAdbCommand(domain.CommandStartServer)
 
 	// prepare reporter
-	// TODO: changes for unary response
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
 
-	// run command
-	result, err := cmd.Run(ctx.Request().Context())
-	if err != nil {
-		return nil
-	}
-	slog.Debug("adb start-server", "result", result.String())
-
-	// report result
-	// TODO: changes for unary response
-	if err := reporter.ReportCommandResult(model.NewCommandResult("", result.Bytes())); err != nil {
-		slog.Error("command result report error", "err", err, "result", result)
-		return nil
-	}
-	if err := reporter.ReportClose(); err != nil {
-		slog.Error("command result report error", "err", err, "result", result)
+	// execute command
+	if err := h.ucExecute.Execute(ctx.Request().Context(), reporter, cmd); err != nil {
+		slog.Error("excute command error", "err", err, "cmd", domain.CommandStartServer)
 		return nil
 	}
 
@@ -440,27 +361,16 @@ func (h *EchoHandler) ExecuteAdbStartServer(ctx echo.Context) error {
 func (h *EchoHandler) ExecuteAdbKillServer(ctx echo.Context) error {
 	slog.Debug("EchoHandler::ExecuteAdbKillServer")
 
-	// parepare commands
+	// prepare command
 	cmd := infra.NewAdbCommand(domain.CommandKillServer)
 
 	// prepare reporter
-	// TODO: changes for unary response
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
 
-	// run command
-	result, err := cmd.Run(ctx.Request().Context())
-	if err != nil {
-		return nil
-	}
-
-	// report result
-	// TODO: changes for unary response
-	if err := reporter.ReportCommandResult(model.NewCommandResult("", result.Bytes())); err != nil {
-		slog.Error("command result report error", "err", err, "result", result)
-		return nil
-	}
-	if err := reporter.ReportClose(); err != nil {
-		slog.Error("command result report error", "err", err, "result", result)
+	// execute command
+	if err := h.ucExecute.Execute(ctx.Request().Context(), reporter, cmd); err != nil {
+		slog.Error("excute command error", "err", err, "cmd", domain.CommandKillServer)
 		return nil
 	}
 

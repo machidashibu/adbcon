@@ -1,6 +1,7 @@
 package infra_test
 
 import (
+	"adbcon/internal/domain"
 	"adbcon/internal/infra"
 	"context"
 	"testing"
@@ -103,21 +104,24 @@ func TestCommandStart(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				runing := true
-				output := []byte{}
+				results := []domain.CommandResult{}
 				for runing {
 					select {
 					case <-ctx.Done():
 						t.Fatalf("test is timeout. (limit: %f sec)", limit.Seconds())
-					case out, ok := <-ch:
+					case result, ok := <-ch:
 						if !ok {
 							runing = false
 							break
 						}
-						output = append(output, out...)
+						results = append(results, result)
 					}
 				}
-				require.NotEmpty(t, output)
-				t.Log(string(output))
+				for index, result := range results {
+					require.NotEmpty(t, result)
+					t.Logf("[%d] %s", index, result.Text())
+				}
+
 			}
 		})
 	}

@@ -7,7 +7,7 @@ const (
 	LabelStatus      = "status"
 	LabelProduct     = "product"
 	LabelModel       = "model"
-	LabelDecide      = "device"
+	LabelDevice      = "device"
 	LabelTransportId = "transport_id"
 	LabelTid         = "tid"
 )
@@ -46,9 +46,9 @@ func (d DeviceInfo) Model() string {
 }
 
 func (d DeviceInfo) Device() string {
-	return pick(d, domain.Unknown, LabelDecide)
+	return pick(d, domain.Unknown, LabelDevice)
 }
 
 func (d DeviceInfo) TransportId() int {
-	return pick(d, 0, LabelDecide, LabelTransportId, LabelTid)
+	return pick(d, 0, LabelTransportId, LabelTid)
 }

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"time"
 
 	yaml "gopkg.in/yaml.v3"
 )
@@ -25,7 +26,18 @@ type ServerConfig struct {
 	// Bind is an address to bind server linstener.
 	Bind string `yaml:"bind"`
 	// Port is a server listen port.
-	Port string `yaml:"port"`
+	Port string    `yaml:"port"`
+	SSE  SSEConfig `yaml:"sse"`
+}
+
+// SSEConfig is a SSE configurations.
+type SSEConfig struct {
+	// Interval is a SSE send maximum interval.
+	// Even if buffer is not filled, send SSE data if expiry this interval.
+	Interval int `yanl:"interval"`
+	// Limit is a same as buffer size.
+	// Send SSE data when buffered line over limit.
+	Limit int `yaml:"limit"`
 }
 
 // Read reads configurations from file.
@@ -80,4 +92,20 @@ func (c Config) ServerBind() string {
 // Default value is definition of openapi if not specified in file.
 func (c Config) ServerPort() string {
 	return c.Server.Port
+}
+
+// ServerSseInterval returns interval time by milliseconds.
+func (c Config) ServerSseInterval() time.Duration {
+	if c.Server.SSE.Interval == 0 {
+		return 100 * time.Millisecond // TODO: supports 0, it measns send immediate
+	}
+	return time.Duration(c.Server.SSE.Interval) * time.Millisecond
+}
+
+// ServerSseLimit returns maximum number to store SSE data in buffer.
+func (c Config) ServerSseLimit() int {
+	if c.Server.SSE.Limit == 0 {
+		return 30 // TODO: supports 0, it measns send immediate
+	}
+	return c.Server.SSE.Limit
 }

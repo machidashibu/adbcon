@@ -19,7 +19,7 @@ This tool provides GUI for ADB command on WEB browser.
 
 ### Build
 
-Execute following command, executable file is generated. (`adbcon.exe` for windows, adbcon for other OS)
+Execute following command, executable file is generated. (`adbcon.exe` for windows, `adbcon` for other OS)
 
 ```bash
 $ go tool task build

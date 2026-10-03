@@ -1,8 +1,8 @@
 log:
   filepath: "logfile.log"
-server:
-  bind: ""
-  port: 12345
+server: {
+  bind: "
+  port: 12345,
   sse:
     interval: 1000
     limit: 300

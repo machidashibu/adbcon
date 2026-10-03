@@ -50,27 +50,25 @@ func (a AdbDeviceParser) Parse(result domain.CommandOutput) (domain.DeviceList, 
 		// get status
 		info[model.LabelStatus] = todomain.DeviceStatus(fields[1])
 
-		if len(fields) < 3 {
-			continue // short format
-		}
+		if len(fields) > 2 {
+			// long format: get option params
+			for _, field := range fields[2:] {
+				// spit by collon
+				vals := strings.Split(field, ":")
+				if len(vals) < 2 {
+					slog.Warn("unknown field", "field", field)
+					continue // value only field
+				}
 
-		// get option params
-		for _, field := range fields[2:] {
-			// spit by collon
-			vals := strings.Split(field, ":")
-			if len(vals) < 2 {
-				slog.Warn("unknown field", "field", field)
-				continue // value only field
-			}
-
-			// repaire value field
-			val := strings.Join(vals[1:], ":")
-			// store number if convertable
-			num, err := strconv.Atoi(val)
-			if err != nil {
-				info[vals[0]] = val
-			} else {
-				info[vals[0]] = num
+				// repaire value field
+				val := strings.Join(vals[1:], ":")
+				// store number if convertable
+				num, err := strconv.Atoi(val)
+				if err != nil {
+					info[vals[0]] = val
+				} else {
+					info[vals[0]] = num
+				}
 			}
 		}
 

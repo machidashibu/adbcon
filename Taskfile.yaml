@@ -25,12 +25,12 @@ tasks:
   test:
     desc: testing.
     cmds:
-      - go test -v ./...
+      - go test -v -tags=use_real_adb ./...
 
   coverage:
     desc: make coverage report
     cmds:
-      - go test -coverprofile={{.COVERAGE_FILE}} ./...
+      - go test -tags=use_real_adb -coverprofile={{.COVERAGE_FILE}} ./...
       - go tool cover -func={{.COVERAGE_FILE}}
     sources:
       - '**/*.go'

@@ -53,12 +53,14 @@ func NewAdbCommandWithSerial(name domain.CommandName, serial string, args ...str
 // Run execute command by sync.
 // Return all output bytes when terminated the command.
 // The output is merged stdout and stderr.
-func (c Command) Run(ctx context.Context) (domain.CommandOutput, error) {
+func (c Command) Run(ctx context.Context, args ...string) (domain.CommandOutput, error) {
 	// prepare
-	cmd := exec.CommandContext(ctx, c.name, c.args...)
+	params := append(c.args, args...)
+	cmd := exec.CommandContext(ctx, c.name, params...)
 	cmd.Stderr = cmd.Stdout // merge stdout & stderr
 
 	// execute and get output
+	slog.Info("run command", "name", c.name, "args", params)
 	output, err := cmd.Output()
 	if err != nil {
 		slog.Error("command output error", "err", err, "name", c.name, "args", c.args)
@@ -72,9 +74,10 @@ func (c Command) Run(ctx context.Context) (domain.CommandOutput, error) {
 // Return channel of output bytes at immediatly.
 // Notify output byte that is each lines via channel.
 // The output is merged stdout and stderr.
-func (c Command) Start(ctx context.Context) (domain.CommandCh, error) {
+func (c Command) Start(ctx context.Context, args ...string) (domain.CommandCh, error) {
 	// prepare
-	cmd := exec.CommandContext(ctx, string(c.name), c.args...)
+	params := append(c.args, args...)
+	cmd := exec.CommandContext(ctx, string(c.name), params...)
 	r, err := cmd.StdoutPipe()
 	if err != nil {
 		slog.Error("command pipe error", "err", err)
@@ -85,6 +88,7 @@ func (c Command) Start(ctx context.Context) (domain.CommandCh, error) {
 	output := make(domain.CommandCh)
 
 	// execute
+	slog.Info("start command", "name", c.name, "args", params)
 	if err := cmd.Start(); err != nil {
 		slog.Error("command start error", "err", err, "name", c.name, "args", c.args)
 		return nil, err
@@ -99,15 +103,15 @@ func (c Command) Start(ctx context.Context) (domain.CommandCh, error) {
 		scan := bufio.NewScanner(r)
 		for scan.Scan() {
 			line := append([]byte(nil), scan.Bytes()...)
-			output <- line
+			output <- model.NewCommandResult("", line)
 		}
 		if err := scan.Err(); err != nil {
-			slog.Error("command scan error", "err", err)
+			output <- model.NewCommandErrorResult("", err)
 		}
 
-		// discard resources
+		// dispose resources
 		if err := cmd.Wait(); err != nil {
-			slog.Error("command wait error", "err", err, "name", c.name, "args", c.args)
+			output <- model.NewCommandErrorResult("", err)
 		}
 	}()
 

@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"adbcon/internal/adapter/handler"
+	"adbcon/internal/infra/config"
 	"adbcon/internal/infra/database"
 	"adbcon/internal/infra/server"
 	"context"
@@ -11,18 +12,6 @@ import (
 
 	"github.com/go-openapi/testify/v2/require"
 )
-
-type stubConfig struct {
-	port string
-}
-
-func (c stubConfig) ServerBind() string {
-	return ""
-}
-
-func (c stubConfig) ServerPort() string {
-	return c.port
-}
 
 // utility: wait server is established
 func waitListening(t *testing.T, address string) {
@@ -44,11 +33,18 @@ func waitListening(t *testing.T, address string) {
 }
 
 func TestEchoServer(t *testing.T) {
+	// prepare
+	cfg := config.Config{
+		Server: config.ServerConfig{
+			Port: "8080",
+		},
+	}
+
 	// testing: server start
 	srv := server.NewEchoServer()
 	require.NotNil(t, srv)
 	go func() {
-		require.NoError(t, srv.Start(context.TODO(), stubConfig{port: "8080"}, handler.Factory(database.StubDatabase{})))
+		require.NoError(t, srv.Start(context.TODO(), cfg, handler.Factory(database.StubDatabase{}, cfg)))
 	}()
 
 	// wait 1st server is established
@@ -57,7 +53,7 @@ func TestEchoServer(t *testing.T) {
 	// testing: confrict port
 	srv2nd := server.NewEchoServer()
 	require.NotNil(t, srv2nd)
-	require.Error(t, srv2nd.Start(context.TODO(), stubConfig{port: "8080"}, handler.Factory(database.StubDatabase{})))
+	require.Error(t, srv2nd.Start(context.TODO(), cfg, handler.Factory(database.StubDatabase{}, cfg)))
 
 	// testing: server shutdown
 	require.NoError(t, srv.Shutdown(context.TODO()))

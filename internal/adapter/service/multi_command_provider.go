@@ -8,33 +8,33 @@ import (
 	"sync"
 )
 
-type MultiCommand struct {
-	cmds map[string]domain.CommandExecuter
+type MultiCommandProvider struct {
+	cmds map[string]domain.AsyncCommandExecuter
 }
 
-func NewMultiCommand() *MultiCommand {
-	return &MultiCommand{
-		cmds: map[string]domain.CommandExecuter{},
+func NewMultiCommandProvider() *MultiCommandProvider {
+	return &MultiCommandProvider{
+		cmds: map[string]domain.AsyncCommandExecuter{},
 	}
 }
 
-func (m *MultiCommand) Add(serial string, cmd domain.CommandExecuter) *MultiCommand {
+func (m *MultiCommandProvider) Add(serial string, cmd domain.AsyncCommandExecuter) *MultiCommandProvider {
 	m.cmds[serial] = cmd
 	return m
 }
 
-func (m MultiCommand) Start(ctx context.Context) chan domain.CommandResult {
-	report := make(chan domain.CommandResult)
+func (m MultiCommandProvider) Start(ctx context.Context, args ...string) (domain.CommandCh, error) {
+	report := make(domain.CommandCh)
 	wg := sync.WaitGroup{}
 
 	// execute all command by async.
 	for serial, cmd := range m.cmds {
 		wg.Add(1)
-		go func(serial string, cmd domain.CommandExecuter) {
+		go func(serial string, name domain.AsyncCommandExecuter) {
 			defer wg.Done()
 
 			// execute command
-			ch, err := cmd.Start(ctx)
+			ch, err := cmd.Start(ctx, args...)
 			if err != nil {
 				slog.Error("command start error", "err", err, "serial", serial)
 				report <- model.NewCommandErrorResult(serial, err)
@@ -49,11 +49,11 @@ func (m MultiCommand) Start(ctx context.Context) chan domain.CommandResult {
 						report <- model.NewCommandErrorResult(serial, ctx.Err())
 					}
 					return // cancel command
-				case output, ok := <-ch:
+				case result, ok := <-ch:
 					if !ok {
 						return // terminate command
 					}
-					report <- model.NewCommandResult(serial, output)
+					report <- model.NewCommandResult(serial, []byte(result.Text()))
 				}
 			}
 		}(serial, cmd)
@@ -65,5 +65,5 @@ func (m MultiCommand) Start(ctx context.Context) chan domain.CommandResult {
 		close(report)
 	}()
 
-	return report
+	return report, nil
 }

@@ -32,7 +32,7 @@ func TestDeviceInfo(t *testing.T) {
 				model.LabelStatus:      domain.Online,
 				model.LabelProduct:     "product",
 				model.LabelModel:       "model",
-				model.LabelDecide:      "device",
+				model.LabelDevice:      "device",
 				model.LabelTransportId: 1,
 			},
 			expectedSerial:      "serial",

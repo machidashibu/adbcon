@@ -26,15 +26,15 @@ type Interval time.Duration
 type DeviceStatus string
 
 const (
-	// Unknown is a common unknown status.
-	Unknown = "unknown"
-
 	Online  DeviceStatus = "online"
 	Offline DeviceStatus = "offline"
 	// UnknownDeviceis a unknown status for device.
 	UnknownDevice DeviceStatus = "unknown"
 	Unauthorized  DeviceStatus = "unauthorized"
 )
+
+// Unknown is a common unknown status.
+const Unknown = "unknown"
 
 // DeviceInfo is a device information.
 type DeviceInfo interface {
@@ -59,3 +59,19 @@ type CommandResult interface {
 	Text() string
 	Error() error
 }
+
+// CommandOutput is an output of command.
+// It has converting method that from bytes (received raw) to string, string array (each lines).
+type CommandOutput interface {
+	// Bytes provides received raw data by byte array.
+	Bytes() []byte
+	// String provides strings that is casted raw data.
+	String() string
+	// Lines provides lines that split by return code.
+	Lines() []string
+	// IsEmpty returns result is empty or not.
+	IsEmpty() bool
+}
+
+// CommandCh is a channel of command output.
+type CommandCh chan CommandResult
