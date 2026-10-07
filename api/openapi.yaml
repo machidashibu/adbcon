@@ -43,6 +43,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+  /api/adb/version:
+    get:
+      summary: Get version of application, ADB and SDK.
+      tags:
+        - general command
+      operationId: GetVersion
+      responses:
+        '200':
+          description: Retusn version
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Version"
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails" 
   /api/adb/push:
     post:
       summary: Execute adb push command that push file(s) and report result.
@@ -451,6 +476,27 @@ components:
       items:
         $ref: "#/components/schemas/DeviceSerial"
       minLength: 1
+    Version:
+      description: Version information
+      properties:
+        app:
+          description: Application version.
+          type: string
+          example: 1.0.0
+        api:
+          description: API version.
+          type: string
+          example: 1.0.0
+        adb:
+          description: ADB version
+          type: string
+          example: 1.0.0
+        sdk:
+          description: Android SDK version
+          type: string
+          example: 1.0.0
+      required:
+        - app
     ProblemDetails:
       description: Details for error response.
       type: object

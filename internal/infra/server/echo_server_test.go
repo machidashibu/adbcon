@@ -44,7 +44,7 @@ func TestEchoServer(t *testing.T) {
 	srv := server.NewEchoServer()
 	require.NotNil(t, srv)
 	go func() {
-		require.NoError(t, srv.Start(context.TODO(), cfg, handler.Factory(database.StubDatabase{}, cfg)))
+		require.NoError(t, srv.Start(context.TODO(), cfg, handler.Factory(database.StubDatabase{}, cfg, "1.0.0")))
 	}()
 
 	// wait 1st server is established
@@ -53,7 +53,7 @@ func TestEchoServer(t *testing.T) {
 	// testing: confrict port
 	srv2nd := server.NewEchoServer()
 	require.NotNil(t, srv2nd)
-	require.Error(t, srv2nd.Start(context.TODO(), cfg, handler.Factory(database.StubDatabase{}, cfg)))
+	require.Error(t, srv2nd.Start(context.TODO(), cfg, handler.Factory(database.StubDatabase{}, cfg, "1.0.0")))
 
 	// testing: server shutdown
 	require.NoError(t, srv.Shutdown(context.TODO()))

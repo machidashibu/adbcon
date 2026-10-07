@@ -73,3 +73,22 @@ func MakeBadRequest(err error) api.ProblemDetails {
 func MakeInternalServerError(err error) api.ProblemDetails {
 	return MakeProblemDetails(http.StatusInternalServerError, err)
 }
+
+// Version maps domain entity to api value.
+func Version(ver domain.Version) api.Version {
+	version := api.Version{
+		App: ver.APP(),
+	}
+
+	if ver.API() != "" {
+		version.Api = new(ver.API())
+	}
+	if ver.ADB() != "" {
+		version.Adb = new(ver.ADB())
+	}
+	if ver.SDK() != "" {
+		version.Sdk = new(ver.SDK())
+	}
+
+	return version
+}

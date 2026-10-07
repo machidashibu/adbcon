@@ -15,12 +15,14 @@ type factoryConfig interface {
 }
 
 // CreateEchoHandler creates handler for echo server.
-func Factory(repo domain.DeviceStatusRepository, config factoryConfig) *EchoHandler {
+func Factory(repo domain.DeviceStatusRepository, config factoryConfig, version string) *EchoHandler {
 	// prepare usecases
-	prov := service.NewDeviceListResulver(infra.NewAdbCommand(domain.CommandDevices, "-l"), controller.AdbDeviceParser{})
-	ucUpdate := usecase.NewUpdateDeviceInfoUsecase(repo, prov)
+	cmdDevInfo := service.NewDeviceListResulver(infra.NewAdbCommand(domain.CommandDevices, "-l"), controller.AdbDeviceParser{})
+	ucUpdate := usecase.NewUpdateDeviceInfoUsecase(repo, cmdDevInfo)
 	ucPeriodicalUpdate := usecase.NewPeriodicalUpdateDeviceListUsecase(ucUpdate)
 	ucExecute := usecase.NewExecuteAdbCommand()
+	cmdVersion := service.NewVersionProvider(infra.NewAdbCommand(domain.CommandVersion), controller.NewAdbVersionParser(version))
+	ucVersion := usecase.NewGetVersionUsecase(cmdVersion)
 
-	return NewEchoHandler(config, ucUpdate, ucPeriodicalUpdate, ucExecute)
+	return NewEchoHandler(config, ucUpdate, ucPeriodicalUpdate, ucExecute, ucVersion)
 }

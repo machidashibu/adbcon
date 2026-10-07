@@ -154,6 +154,29 @@ type RebootArgs string
 // SerialList List of device serial.
 type SerialList = []DeviceSerial
 
+// Version Version information
+type Version struct {
+	// Adb ADB version
+	//
+	// Example: 1.0.0
+	Adb *string `json:"adb,omitempty"`
+
+	// Api API version.
+	//
+	// Example: 1.0.0
+	Api *string `json:"api,omitempty"`
+
+	// App Application version.
+	//
+	// Example: 1.0.0
+	App string `json:"app"`
+
+	// Sdk Android SDK version
+	//
+	// Example: 1.0.0
+	Sdk *string `json:"sdk,omitempty"`
+}
+
 // PollingInterval defines model for PollingInterval.
 type PollingInterval = int
 
@@ -246,6 +269,9 @@ type ServerInterface interface {
 	// ExecuteAdbUnroot Execute adb unroot command and report result.
 	// (POST /api/adb/unroot)
 	ExecuteAdbUnroot(ctx echo.Context) error
+	// GetVersion Get version of application, ADB and SDK.
+	// (GET /api/adb/version)
+	GetVersion(ctx echo.Context) error
 	// GetDevices Execute adb devices command and report device status.
 	// (GET /api/devices)
 	GetDevices(ctx echo.Context, params GetDevicesParams) error
@@ -385,6 +411,15 @@ func (w *ServerInterfaceWrapper) ExecuteAdbUnroot(ctx echo.Context) error {
 	return err
 }
 
+// GetVersion converts echo context to params.
+func (w *ServerInterfaceWrapper) GetVersion(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetVersion(ctx)
+	return err
+}
+
 // GetDevices converts echo context to params.
 func (w *ServerInterfaceWrapper) GetDevices(ctx echo.Context) error {
 	var err error
@@ -461,6 +496,7 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 
 	router.GET(options.BaseURL+"/gui", wrapper.GetMainPage, options.OperationMiddlewares["GetMainPage"]...)
 	router.GET(options.BaseURL+"/api/devices", wrapper.GetDevices, options.OperationMiddlewares["GetDevices"]...)
+	router.GET(options.BaseURL+"/api/adb/version", wrapper.GetVersion, options.OperationMiddlewares["GetVersion"]...)
 	router.POST(options.BaseURL+"/api/adb/push", wrapper.ExecuteAdbPush, options.OperationMiddlewares["ExecuteAdbPush"]...)
 	router.POST(options.BaseURL+"/api/adb/pull", wrapper.ExecuteAdbPull, options.OperationMiddlewares["ExecuteAdbPull"]...)
 	router.POST(options.BaseURL+"/api/adb/shell", wrapper.ExecuteAdbShell, options.OperationMiddlewares["ExecuteAdbShell"]...)
@@ -478,36 +514,38 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

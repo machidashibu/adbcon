@@ -25,3 +25,7 @@ type CommandExecuter interface {
 type DeviceListResolver interface {
 	GetDeviceList(ctx context.Context) (DeviceList, error)
 }
+
+type VersionResolver interface {
+	GetVersion(ctx context.Context) (Version, error)
+}

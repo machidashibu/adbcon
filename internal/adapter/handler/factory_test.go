@@ -10,5 +10,5 @@ import (
 )
 
 func TestCreateEchoServer(t *testing.T) {
-	require.NotNil(t, handler.Factory(new(database.StubDatabase), config.Config{}))
+	require.NotNil(t, handler.Factory(new(database.StubDatabase), config.Config{}, "1.0.0"))
 }

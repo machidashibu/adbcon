@@ -12,6 +12,9 @@ import (
 	"os/signal"
 )
 
+const appName = "adbcon"
+const appVersion = "1.0.0"
+
 func main() {
 	// read configuration
 	cfg := new(config.Config)
@@ -43,7 +46,7 @@ func run(cfg *config.Config) int {
 	apiServer := server.NewEchoServer()
 	apiError := make(chan error, 1)
 	go func() {
-		if err := apiServer.Start(ctx, cfg, handler.Factory(dbStatus, cfg)); err != nil {
+		if err := apiServer.Start(ctx, cfg, handler.Factory(dbStatus, cfg, appVersion)); err != nil {
 			apiError <- err
 		}
 	}()

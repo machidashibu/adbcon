@@ -111,3 +111,35 @@ func TestMakeInternalServerError(t *testing.T) {
 	require.Equal(t, "Internal Server Error", *api.Title)
 	require.Equal(t, "error test dummy", *api.Detail)
 }
+
+func TestVersion(t *testing.T) {
+	type testcase struct {
+		name string
+		in   domain.Version
+		want api.Version
+	}
+	testcases := []testcase{
+		{
+			name: "full",
+			in:   model.Version{App: "1.0.0", Api: "2.0.0", Adb: "3.0.0", Sdk: "4.0.0"},
+			want: api.Version{App: "1.0.0", Api: new("2.0.0"), Adb: new("3.0.0"), Sdk: new("4.0.0")},
+		},
+		{
+			name: "minimum",
+			in:   model.Version{App: "1.0.0"},
+			want: api.Version{App: "1.0.0", Api: nil, Adb: nil, Sdk: nil},
+		},
+		{
+			name: "empty",
+			in:   model.Version{},
+			want: api.Version{App: "", Api: nil, Adb: nil, Sdk: nil},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			api := toapi.Version(tc.in)
+			require.Equal(t, tc.want, api)
+		})
+	}
+}

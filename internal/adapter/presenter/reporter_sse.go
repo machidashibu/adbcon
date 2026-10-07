@@ -76,6 +76,11 @@ func (r SSEReporter) ReportCommandResult(result domain.CommandResult) error {
 	return r.report(toapi.CommandResult(result))
 }
 
+func (r SSEReporter) ReportVersion(version domain.Version) error {
+	// TODO:
+	return r.report(toapi.Version(version))
+}
+
 // ReportClose reports to close SSE connection.
 func (r SSEReporter) ReportClose() error {
 	// report

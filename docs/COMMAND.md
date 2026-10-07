@@ -11,7 +11,7 @@ Memo for development.
 | ------- | ----------- | ---- | ---- |
 | devices | `/api/devices` | w/o | auto polling |
 | help | x | w/o | |
-| version | x | w/o | |
+| version | `/api/adb/version | w/o | GET |
 | connect | x | | |
 | disconnect | x | | |
 | forward | x | | |

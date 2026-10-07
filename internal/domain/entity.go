@@ -8,6 +8,7 @@ type CommandName string
 const (
 	CommandAdb         CommandName = "adb"
 	CommandDevices     CommandName = "devices"
+	CommandVersion     CommandName = "version"
 	CommandPush        CommandName = "push"
 	CommandPull        CommandName = "pull"
 	CommandShell       CommandName = "shell"
@@ -75,3 +76,10 @@ type CommandOutput interface {
 
 // CommandCh is a channel of command output.
 type CommandCh chan CommandResult
+
+type Version interface {
+	APP() string
+	API() string
+	ADB() string
+	SDK() string
+}

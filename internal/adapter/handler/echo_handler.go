@@ -25,6 +25,7 @@ type EchoHandler struct {
 	ucUpdate           *usecase.UpdateDeviceListUsecase
 	ucPeriodicalUpdate *usecase.PeriodicalUpdateDeviceListUsecase
 	ucExecute          *usecase.ExecuteAdbCommand
+	ucVersion          *usecase.GetVersionUsecase
 	sseInterval        time.Duration
 	sseLimit           int
 }
@@ -32,11 +33,13 @@ type EchoHandler struct {
 func NewEchoHandler(config handlerConfig,
 	ucUpdate *usecase.UpdateDeviceListUsecase,
 	ucPeriodicalUpdate *usecase.PeriodicalUpdateDeviceListUsecase,
-	ucExecute *usecase.ExecuteAdbCommand) *EchoHandler {
+	ucExecute *usecase.ExecuteAdbCommand,
+	ucVersion *usecase.GetVersionUsecase) *EchoHandler {
 	return &EchoHandler{
 		ucUpdate:           ucUpdate,
 		ucPeriodicalUpdate: ucPeriodicalUpdate,
 		ucExecute:          ucExecute,
+		ucVersion:          ucVersion,
 		sseInterval:        config.ServerSseInterval(),
 		sseLimit:           config.ServerSseLimit(),
 	}
@@ -62,17 +65,36 @@ func (h *EchoHandler) GetDevices(ctx echo.Context, params api.GetDevicesParams) 
 	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
 	defer reporter.ReportClose()
 
-	// proceeds polling if interval is specified in query
 	if priodical {
+		// periodical
 		if err := h.ucPeriodicalUpdate.Update(ctx.Request().Context(), reporter, interval); err != nil {
 			slog.Error("periodical update error", "err", err)
 			return nil
 		}
 	} else {
+		// 1 shot
 		if err := h.ucUpdate.Update(ctx.Request().Context(), reporter, interval); err != nil {
 			slog.Error("periodical update error", "err", err)
 			return nil
 		}
+	}
+
+	return nil
+}
+
+// GetVersion Get version of application, ADB and SDK.
+// (GET /api/adb/version)
+func (h *EchoHandler) GetVersion(ctx echo.Context) error {
+	slog.Debug("EchoHandler::GetVersion")
+
+	// prepare reporter
+	reporter := presenter.NewSSEReporter(ctx.Response(), h.sseInterval, h.sseLimit)
+	defer reporter.ReportClose()
+
+	// get version
+	if err := h.ucVersion.Get(ctx.Request().Context(), reporter); err != nil {
+		slog.Error("get version error", "err", err)
+		return nil
 	}
 
 	return nil
